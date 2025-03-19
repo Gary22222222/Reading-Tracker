@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.group20.dailyreadingtracker.role.RoleRepository;
+import com.group20.dailyreadingtracker.repository.RoleRepository;
 
 @Service
 public class UserService implements IUserService{
