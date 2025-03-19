@@ -1,8 +1,9 @@
-package com.group20.dailyreadingtracker.user;
+package com.group20.dailyreadingtracker.entity;
 
+import java.util.Objects;
 import java.util.Set;
 
-import com.group20.dailyreadingtracker.role.Role;
+import com.group20.dailyreadingtracker.entity.Role;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,7 +18,7 @@ import jakarta.persistence.Table;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(name="username", nullable=false, length=40)
     private String username;
@@ -45,7 +46,7 @@ public class User {
                 this.roles = roles;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
@@ -91,4 +92,5 @@ public class User {
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
+
 }

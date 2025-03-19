@@ -1,7 +1,7 @@
 package com.group20.dailyreadingtracker.repository;
 
 
-import com.group20.dailyreadingtracker.user.User;
+import com.group20.dailyreadingtracker.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;

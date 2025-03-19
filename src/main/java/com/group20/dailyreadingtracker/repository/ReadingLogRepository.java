@@ -9,5 +9,5 @@ import java.util.List;
 
 @Repository
 public interface ReadingLogRepository extends JpaRepository<ReadingLog, Long> {
-    List<ReadingLog> findByUserId(Long userId, Pageable pageable);
+    List<ReadingLog> findByUserId(Long userId);
 }
