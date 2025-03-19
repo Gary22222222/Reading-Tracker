@@ -18,7 +18,7 @@ import java.util.Map;
 public class ReadingLogController {
     private final ReadingLogService service;
     // 🔹 获取当前用户的所有阅读日志
-    @GetMapping
+    @GetMapping("/api/reading-logs")
     public ResponseEntity<List<ReadingLog>> getAllLogs(Principal principal) {
         Long userId = getUserIdFromPrincipal(principal);
         List<ReadingLog> logs = service.getAllLogsByUser(userId);
@@ -26,13 +26,13 @@ public class ReadingLogController {
     }
 
     // 🔹 获取某个日志的详情
-    @GetMapping("/{id}")
+    @GetMapping("/api/reading-logs/{logId}")
     public ResponseEntity<ReadingLog> getLogById(@PathVariable Long id, Principal principal) {
         Long userId = getUserIdFromPrincipal(principal);
         ReadingLog log = service.getLogById(userId, id);
         return ResponseEntity.ok(log);
     }
-    @PutMapping("/{id}")
+    @PutMapping("/api/reading-logs/{logId}")
     public ResponseEntity<?> updateLog(@PathVariable Long id, @RequestBody @Valid ReadingLogDto dto, Principal principal) {
         Long userId = getUserIdFromPrincipal(principal);
         ReadingLog updatedLog = service.updateLog(userId, id, dto);
@@ -41,13 +41,13 @@ public class ReadingLogController {
 
 
 
-    @PostMapping
+    @PostMapping("/api/reading-logs")
     public ResponseEntity<?> createLog(@RequestBody @Valid ReadingLogDto dto, Principal principal) {
         Long userId = getUserIdFromPrincipal(principal);
         ReadingLog log = service.createLog(userId, dto);
         return ResponseEntity.ok(Map.of("id", log.getId(), "message", "Reading log created successfully"));
     }
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/api/reading-logs/{logId}")
     public ResponseEntity<?> deleteLog(@PathVariable Long id, Principal principal) {
         Long userId = getUserIdFromPrincipal(principal);
         service.deleteLog(userId, id);

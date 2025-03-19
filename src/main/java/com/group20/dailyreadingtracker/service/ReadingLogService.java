@@ -5,8 +5,10 @@ package com.group20.dailyreadingtracker.service;
 import com.group20.dailyreadingtracker.dto.ReadingLogDto;
 import com.group20.dailyreadingtracker.entity.ReadingLog;
 import com.group20.dailyreadingtracker.entity.User;
+import com.group20.dailyreadingtracker.entity.ViolationLog;
 import com.group20.dailyreadingtracker.repository.ReadingLogRepository;
 import com.group20.dailyreadingtracker.repository.UserRepository;
+import com.group20.dailyreadingtracker.repository.ViolationLogRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import java.util.List;
 public class ReadingLogService {
     private final ReadingLogRepository readingLogRepository;
     private final UserRepository userRepository;
+    private final ViolationLogRepository violationLogRepository;
 
     @Transactional
     public ReadingLog createLog(Long userId, ReadingLogDto dto) {
@@ -77,6 +80,26 @@ public class ReadingLogService {
         log.setNotes(dto.getNotes());
 
         return readingLogRepository.save(log); // 持久化修改
+    }
+    public List<ReadingLog> getAllLogs() {
+        return readingLogRepository.findAllLogs();
+    }
+    /**
+     * 管理员删除违规日志
+     */
+    public void deleteInappropriateLog(Long logId) {
+        ReadingLog log = null;
+
+        log = readingLogRepository.findById(logId).orElseThrow(() -> new RuntimeException("Log not found"));
+
+
+
+
+        // 记录违规日志删除信息
+        ViolationLog violationLog = new ViolationLog(log);
+        violationLogRepository.save(violationLog);
+
+        readingLogRepository.delete(log);
     }
 
 }

@@ -45,6 +45,16 @@ public class User {
                 this.isEnabled = isEnabled;
                 this.roles = roles;
     }
+    private boolean isLocked = false;  // 用户是否被锁定
+
+    // Getters & Setters
+    public boolean isLocked() {
+        return isLocked;
+    }
+
+    public void setLocked(boolean locked) {
+        isLocked = locked;
+    }
 
     public Long getId() {
         return id;
