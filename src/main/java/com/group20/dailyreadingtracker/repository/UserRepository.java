@@ -14,6 +14,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // 检查某个 email 是否已存在
     boolean existsByEmail(String email);
-
 }
 
