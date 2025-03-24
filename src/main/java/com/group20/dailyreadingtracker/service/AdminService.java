@@ -1,7 +1,7 @@
 package com.group20.dailyreadingtracker.service;
 
 import com.group20.dailyreadingtracker.entity.User;
-import com.group20.dailyreadingtracker.repository.UserRepository;
+import com.group20.dailyreadingtracker.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
