@@ -1,10 +1,10 @@
 package com.group20.dailyreadingtracker;
 
 
-import com.group20.dailyreadingtracker.controller.ReadingLogController;
-import com.group20.dailyreadingtracker.entity.ReadingLog;
-import com.group20.dailyreadingtracker.service.ReadingLogService;
-import com.group20.dailyreadingtracker.dto.ReadingLogDto;
+import com.group20.dailyreadingtracker.readinglog.ReadingLogController;
+import com.group20.dailyreadingtracker.readinglog.ReadingLog;
+import com.group20.dailyreadingtracker.readinglog.ReadingLogService;
+import com.group20.dailyreadingtracker.readinglog.ReadingLogDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
