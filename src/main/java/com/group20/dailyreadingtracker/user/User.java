@@ -6,9 +6,12 @@ import com.group20.dailyreadingtracker.role.Role;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
@@ -17,7 +20,7 @@ import jakarta.persistence.Table;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private long id;
 
     @Column(name="username", nullable=false, length=40)
     private String username;
@@ -29,7 +32,12 @@ public class User {
     private String password;
     private boolean isEnabled = false; // Email verification
 
-    @ManyToMany
+    @ManyToMany(fetch=FetchType.EAGER)
+    @JoinTable(
+        name = "user_roles",
+        joinColumns = @JoinColumn(name="user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
     private Set<Role> roles;
 
     public User(){}
@@ -44,18 +52,8 @@ public class User {
                 this.isEnabled = isEnabled;
                 this.roles = roles;
     }
-    private boolean isLocked = false;  // 用户是否被锁定
 
-    // Getters & Setters
-    public boolean isLocked() {
-        return isLocked;
-    }
-
-    public void setLocked(boolean locked) {
-        isLocked = locked;
-    }
-
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
@@ -101,5 +99,4 @@ public class User {
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
-
 }

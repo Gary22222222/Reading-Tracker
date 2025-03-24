@@ -15,7 +15,7 @@ import com.group20.dailyreadingtracker.user.UserRepository;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace=Replace.NONE) // Use actual database
 @Rollback(false)                                 // Commit changes to db
-public class UserRepositoryTests {
+public class UserRepositoryTest {
     
     @Autowired
     private TestEntityManager entityManager;
