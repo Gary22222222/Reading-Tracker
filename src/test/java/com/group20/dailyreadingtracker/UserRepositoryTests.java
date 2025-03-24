@@ -9,7 +9,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.annotation.Rollback;
 
-import com.group20.dailyreadingtracker.entity.User;
+import com.group20.dailyreadingtracker.user.User;
 import com.group20.dailyreadingtracker.user.UserRepository;
 
 @DataJpaTest

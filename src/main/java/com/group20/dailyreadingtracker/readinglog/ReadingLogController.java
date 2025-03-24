@@ -1,8 +1,8 @@
-package com.group20.dailyreadingtracker.controller;
+package com.group20.dailyreadingtracker.readinglog;
 
-import com.group20.dailyreadingtracker.dto.ReadingLogDto;
-import com.group20.dailyreadingtracker.entity.ReadingLog;
-import com.group20.dailyreadingtracker.service.ReadingLogService;
+import com.group20.dailyreadingtracker.readinglog.ReadingLogDto;
+import com.group20.dailyreadingtracker.readinglog.ReadingLog;
+import com.group20.dailyreadingtracker.readinglog.ReadingLogService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

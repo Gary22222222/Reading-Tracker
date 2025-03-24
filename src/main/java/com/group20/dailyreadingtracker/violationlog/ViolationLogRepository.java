@@ -1,6 +1,6 @@
-package com.group20.dailyreadingtracker.repository;
+package com.group20.dailyreadingtracker.violationlog;
 
-import com.group20.dailyreadingtracker.entity.ViolationLog;
+import com.group20.dailyreadingtracker.violationlog.ViolationLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

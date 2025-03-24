@@ -1,11 +1,9 @@
-package com.group20.dailyreadingtracker.repository;
+package com.group20.dailyreadingtracker.readinglog;
 
-import com.group20.dailyreadingtracker.entity.ReadingLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.awt.print.Pageable;
 import java.util.List;
 
 @Repository

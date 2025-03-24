@@ -1,5 +1,6 @@
-package com.group20.dailyreadingtracker.entity;
+package com.group20.dailyreadingtracker.readinglog;
 
+import com.group20.dailyreadingtracker.user.User;
 import jakarta.persistence.Entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

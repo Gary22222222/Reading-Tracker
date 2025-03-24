@@ -1,7 +1,8 @@
-package com.group20.dailyreadingtracker.entity;
+package com.group20.dailyreadingtracker.role;
 
 import java.util.Set;
 
+import com.group20.dailyreadingtracker.user.User;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

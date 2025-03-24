@@ -1,14 +1,11 @@
-package com.group20.dailyreadingtracker.service;
+package com.group20.dailyreadingtracker.readinglog;
 
 
 
-import com.group20.dailyreadingtracker.dto.ReadingLogDto;
-import com.group20.dailyreadingtracker.entity.ReadingLog;
-import com.group20.dailyreadingtracker.entity.User;
-import com.group20.dailyreadingtracker.entity.ViolationLog;
-import com.group20.dailyreadingtracker.repository.ReadingLogRepository;
-import com.group20.dailyreadingtracker.repository.ViolationLogRepository;
+import com.group20.dailyreadingtracker.user.User;
+import com.group20.dailyreadingtracker.violationlog.ViolationLog;
 import com.group20.dailyreadingtracker.user.UserRepository;
+import com.group20.dailyreadingtracker.violationlog.ViolationLogRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

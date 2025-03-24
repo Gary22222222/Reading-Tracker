@@ -2,12 +2,11 @@ package com.group20.dailyreadingtracker.user;
 
 import java.util.HashSet;
 
-import com.group20.dailyreadingtracker.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.group20.dailyreadingtracker.repository.RoleRepository;
+import com.group20.dailyreadingtracker.role.RoleRepository;
 
 @Service
 public class UserService implements IUserService{

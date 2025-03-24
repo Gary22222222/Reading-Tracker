@@ -1,5 +1,6 @@
-package com.group20.dailyreadingtracker.entity;
+package com.group20.dailyreadingtracker.violationlog;
 
+import com.group20.dailyreadingtracker.readinglog.ReadingLog;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

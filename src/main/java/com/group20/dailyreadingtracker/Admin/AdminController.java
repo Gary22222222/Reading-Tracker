@@ -1,8 +1,7 @@
-package com.group20.dailyreadingtracker.controller;
+package com.group20.dailyreadingtracker.Admin;
 
-import com.group20.dailyreadingtracker.entity.ReadingLog;
-import com.group20.dailyreadingtracker.service.AdminService;
-import com.group20.dailyreadingtracker.service.ReadingLogService;
+import com.group20.dailyreadingtracker.readinglog.ReadingLog;
+import com.group20.dailyreadingtracker.readinglog.ReadingLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

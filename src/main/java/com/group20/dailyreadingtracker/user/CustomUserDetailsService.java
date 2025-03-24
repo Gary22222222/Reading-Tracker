@@ -3,7 +3,6 @@ package com.group20.dailyreadingtracker.user;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.group20.dailyreadingtracker.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -11,7 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import com.group20.dailyreadingtracker.entity.Role;
+import com.group20.dailyreadingtracker.role.Role;
 
 public class CustomUserDetailsService implements UserDetailsService{
 

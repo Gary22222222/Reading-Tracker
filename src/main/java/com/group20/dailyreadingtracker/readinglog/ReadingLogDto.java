@@ -1,4 +1,4 @@
-package com.group20.dailyreadingtracker.dto;
+package com.group20.dailyreadingtracker.readinglog;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
