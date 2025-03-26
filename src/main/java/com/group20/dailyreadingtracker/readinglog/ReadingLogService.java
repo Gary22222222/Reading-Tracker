@@ -42,7 +42,7 @@ public class ReadingLogService {
         return readingLogRepository.findByUserId(userId);
     }
     @Transactional
-    public void deleteLog(Long userId, Long logId) {
+    public void deleteLog(long userId, long logId) {
         ReadingLog log = readingLogRepository.findById(logId)
                 .orElseThrow(() -> new EntityNotFoundException("Log not found"));
 

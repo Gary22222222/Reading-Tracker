@@ -25,5 +25,8 @@ public class ReadingLogDto {
 
     public ReadingLogDto(String springBoot, String johnDoe, Object o, int i, String test) {
     }
+
+    public ReadingLogDto() {
+    }
 }
 

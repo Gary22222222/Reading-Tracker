@@ -20,7 +20,7 @@ import jakarta.persistence.Table;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(name="username", nullable=false, length=40)
     private String username;
@@ -40,9 +40,11 @@ public class User {
     )
     private Set<Role> roles;
 
+    private boolean locked = false;
+
     public User(){}
 
-    public User(long id, String username, String email, String password,
+    public User(Long id, String username, String email, String password,
             boolean isEnabled, Set<Role> roles) {
                 super();
                 this.id = id;
@@ -53,7 +55,7 @@ public class User {
                 this.roles = roles;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
@@ -99,4 +101,14 @@ public class User {
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
+
 }

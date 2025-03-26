@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,8 +18,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ReadingLogController {
     private final ReadingLogService service;
+
     // 🔹 获取当前用户的所有阅读日志
-    @GetMapping("/api/reading-logs")
+    @GetMapping
     public ResponseEntity<List<ReadingLog>> getAllLogs(Principal principal) {
         Long userId = getUserIdFromPrincipal(principal);
         List<ReadingLog> logs = service.getAllLogsByUser(userId);
@@ -26,38 +28,43 @@ public class ReadingLogController {
     }
 
     // 🔹 获取某个日志的详情
-    @GetMapping("/api/reading-logs/{logId}")
-    public ResponseEntity<ReadingLog> getLogById(@PathVariable Long id, Principal principal) {
+    @GetMapping("/{logId}")
+    public ResponseEntity<ReadingLog> getLogById(@PathVariable("logId") Long id, Principal principal) {
         Long userId = getUserIdFromPrincipal(principal);
         ReadingLog log = service.getLogById(userId, id);
         return ResponseEntity.ok(log);
     }
-    @PutMapping("/api/reading-logs/{logId}")
-    public ResponseEntity<?> updateLog(@PathVariable Long id, @RequestBody @Valid ReadingLogDto dto, Principal principal) {
+
+    // 🔹 更新阅读日志
+    @PutMapping("/{logId}")
+    public ResponseEntity<?> updateLog(@PathVariable("logId") Long id, @RequestBody @Valid ReadingLogDto dto, Principal principal) {
         Long userId = getUserIdFromPrincipal(principal);
         ReadingLog updatedLog = service.updateLog(userId, id, dto);
         return ResponseEntity.ok(Map.of("id", updatedLog.getId(), "message", "Reading log updated successfully"));
     }
 
-
-
-    @PostMapping("/api/reading-logs")
+    // 🔹 创建阅读日志
+    @PostMapping
     public ResponseEntity<?> createLog(@RequestBody @Valid ReadingLogDto dto, Principal principal) {
         Long userId = getUserIdFromPrincipal(principal);
         ReadingLog log = service.createLog(userId, dto);
         return ResponseEntity.ok(Map.of("id", log.getId(), "message", "Reading log created successfully"));
     }
-    @DeleteMapping("/api/reading-logs/{logId}")
-    public ResponseEntity<?> deleteLog(@PathVariable Long id, Principal principal) {
+
+    // 🔹 删除阅读日志
+    @DeleteMapping("/{logId}")
+    public ResponseEntity<?> deleteLog(@PathVariable("logId") Long id, Principal principal) {
         Long userId = getUserIdFromPrincipal(principal);
         service.deleteLog(userId, id);
         return ResponseEntity.ok(Map.of("message", "Reading log deleted successfully"));
     }
 
-
     private Long getUserIdFromPrincipal(Principal principal) {
         // 解析当前用户ID（假设 Spring Security 处理身份验证）
         return Long.valueOf(principal.getName());
     }
+
+
 }
+
 
