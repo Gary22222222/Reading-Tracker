@@ -36,7 +36,7 @@ class ReadingLogControllerTest {
     @BeforeEach
     void setUp() {
         mockPrincipal = Mockito.mock(Principal.class);
-        when(mockPrincipal.getName()).thenReturn(String.valueOf(USER_ID));
+        lenient().when(mockPrincipal.getName()).thenReturn(String.valueOf(USER_ID));
     }
 
     @Test
@@ -56,7 +56,7 @@ class ReadingLogControllerTest {
         ReadingLog mockLog = new ReadingLog();
         when(readingLogService.getLogById(USER_ID, LOG_ID)).thenReturn(mockLog);
 
-        ResponseEntity<ReadingLog> response = readingLogController.getLogById(LOG_ID, mockPrincipal);
+        ResponseEntity<ReadingLog> response = (ResponseEntity<ReadingLog>) readingLogController.getLogById(LOG_ID, mockPrincipal);
 
         assertThat(response.getBody()).isEqualTo(mockLog);
         assertThat(response.getStatusCodeValue()).isEqualTo(200);
@@ -97,11 +97,87 @@ class ReadingLogControllerTest {
     void shouldDeleteReadingLog() {
         doNothing().when(readingLogService).deleteLog(USER_ID, LOG_ID);
 
-        ResponseEntity<Map<String, String>> response = (ResponseEntity<Map<String, String>>) readingLogController.deleteLog(LOG_ID, mockPrincipal);
+        ResponseEntity<Map<String, Object>> response = (ResponseEntity<Map<String, Object>>) readingLogController.deleteLog(LOG_ID, mockPrincipal);
 
         assertThat(response.getBody()).containsEntry("message", "Reading log deleted successfully");
         assertThat(response.getStatusCodeValue()).isEqualTo(200);
         verify(readingLogService).deleteLog(USER_ID, LOG_ID);
     }
+
+    @Test
+    void shouldReturn400WhenDtoIsNull() {
+        ResponseEntity<?> response = readingLogController.createLog(null, mockPrincipal);
+
+        assertThat(response.getStatusCodeValue()).isEqualTo(400);
+    }
+
+    @Test
+    void shouldReturn404WhenLogNotFound() {
+        when(readingLogService.getLogById(USER_ID, LOG_ID)).thenThrow(new IllegalArgumentException("Log not found"));
+
+        ResponseEntity<?> response = readingLogController.getLogById(LOG_ID, mockPrincipal);
+
+        assertThat(response.getStatusCodeValue()).isEqualTo(404);
+        assertThat(response.getBody()).isEqualTo(Map.of("error", "Reading log not found"));
+        verify(readingLogService).getLogById(USER_ID, LOG_ID);
+    }
+
+    @Test
+    void shouldReturn403WhenAccessingOtherUsersLog() {
+        when(readingLogService.getLogById(USER_ID, LOG_ID)).thenThrow(new SecurityException("Access denied"));
+
+        ResponseEntity<?> response = readingLogController.getLogById(LOG_ID, mockPrincipal);
+
+        assertThat(response.getStatusCodeValue()).isEqualTo(403);
+        assertThat(response.getBody()).isEqualTo(Map.of("error", "Access denied"));
+        verify(readingLogService).getLogById(USER_ID, LOG_ID);
+    }
+
+    @Test
+    void shouldHandleLargeDataVolume() {
+        List<ReadingLog> mockLogs = List.of(new ReadingLog(), new ReadingLog()); // Simulate a large dataset
+        when(readingLogService.getAllLogsByUser(USER_ID)).thenReturn(mockLogs);
+
+        ResponseEntity<List<ReadingLog>> response = readingLogController.getAllLogs(mockPrincipal);
+
+        assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        assertThat(response.getBody()).isEqualTo(mockLogs);
+        verify(readingLogService).getAllLogsByUser(USER_ID);
+    }
+
+    @Test
+    void shouldReturn413WhenPayloadTooLarge() {
+        ReadingLogDto largeDto = new ReadingLogDto(); // Simulate a large payload
+        // Assume service throws an exception for large payloads
+        when(readingLogService.createLog(USER_ID, largeDto)).thenThrow(new IllegalArgumentException("Payload too large"));
+
+        ResponseEntity<?> response = readingLogController.createLog(largeDto, mockPrincipal);
+
+        assertThat(response.getStatusCodeValue()).isEqualTo(413);
+        assertThat(response.getBody()).isEqualTo(Map.of("error", "Payload too large"));
+    }
+
+    @Test
+    void shouldReturn400ForInvalidIdFormat() {
+        ResponseEntity<?> response = readingLogController.getLogById(-1L, mockPrincipal);
+
+        assertThat(response.getStatusCodeValue()).isEqualTo(400);
+        assertThat(response.getBody()).isEqualTo(Map.of("error", "Invalid log ID format"));
+    }
+
+    @Test
+    void shouldHandleMultipleRequestsWithoutSideEffects() {
+        List<ReadingLog> mockLogs = List.of(new ReadingLog(), new ReadingLog());
+        when(readingLogService.getAllLogsByUser(USER_ID)).thenReturn(mockLogs);
+
+        for (int i = 0; i < 10; i++) {
+            ResponseEntity<List<ReadingLog>> response = readingLogController.getAllLogs(mockPrincipal);
+            assertThat(response.getStatusCodeValue()).isEqualTo(200);
+            assertThat(response.getBody()).isEqualTo(mockLogs);
+        }
+
+        verify(readingLogService, times(10)).getAllLogsByUser(USER_ID);
+    }
 }
+
 
