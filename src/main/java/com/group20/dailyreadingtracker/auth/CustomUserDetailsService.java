@@ -1,4 +1,4 @@
-package com.group20.dailyreadingtracker.user;
+package com.group20.dailyreadingtracker.auth;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -12,6 +12,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.group20.dailyreadingtracker.role.Role;
+import com.group20.dailyreadingtracker.user.User;
+import com.group20.dailyreadingtracker.user.UserRepository;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService{
@@ -32,3 +34,4 @@ public class CustomUserDetailsService implements UserDetailsService{
     }
     
 }
+
