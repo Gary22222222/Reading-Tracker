@@ -59,9 +59,10 @@ public class ReadingLogService {
     // 🔹 查询某个用户的单个阅读日志
     public ReadingLog getLogById(Long logId, Long userId) {
         return readingLogRepository.findById(logId)
-                .filter(log -> log.getUser().getId().equals(userId)) // 确保该日志属于当前用户
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reading log not found"));
+                .filter(log -> log.getUser().getId().equals(userId))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reading log not found or unauthorized"));
     }
+
     // 🔹 更新阅读日志
     public ReadingLog updateLog(Long userId, Long logId, ReadingLogDto dto) {
         // 先检查日志是否存在，并且属于该用户
@@ -85,17 +86,16 @@ public class ReadingLogService {
      * 管理员删除违规日志
      */
     public void deleteInappropriateLog(Long logId) {
-        ReadingLog log = null;
+        ReadingLog log = readingLogRepository.findById(logId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reading log not found"));
 
-        log = readingLogRepository.findById(logId).orElseThrow(() -> new RuntimeException("Log not found"));
-
-
-
-
-        // 记录违规日志删除信息
-        ViolationLog violationLog = new ViolationLog(log);
+        // 保存到 ViolationLogRepository
+        ViolationLog violationLog = new ViolationLog();
+        violationLog.setLogId(log.getId());
+        violationLog.setReason("Inappropriate content");
         violationLogRepository.save(violationLog);
 
+        // 删除日志
         readingLogRepository.delete(log);
     }
 
