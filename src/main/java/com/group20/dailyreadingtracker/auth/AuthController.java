@@ -9,13 +9,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import com.group20.dailyreadingtracker.security.SecurityService;
 import com.group20.dailyreadingtracker.user.User;
-import com.group20.dailyreadingtracker.user.UserService;
 
 @Controller
 public class AuthController {
     
     @Autowired
-    private UserService userService;
+    private AuthService AuthService;
 
     @Autowired
     private SecurityService securityService;
@@ -32,7 +31,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public String processRegistration(@ModelAttribute("user") User user) {
-        userService.save(user);
+        AuthService.register(user);
 
         securityService.autoLogin(user.getEmail(), user.getPassword());
 

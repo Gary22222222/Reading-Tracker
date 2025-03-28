@@ -1,4 +1,4 @@
-package com.group20.dailyreadingtracker.user;
+package com.group20.dailyreadingtracker.auth;
 
 import java.util.HashSet;
 import java.util.List;
@@ -8,23 +8,24 @@ import org.springframework.stereotype.Service;
 
 import com.group20.dailyreadingtracker.role.Role;
 import com.group20.dailyreadingtracker.role.RoleRepository;
+import com.group20.dailyreadingtracker.user.User;
+import com.group20.dailyreadingtracker.user.UserRepository;
 
 @Service
-public class UserService implements IUserService{
+public class AuthService {
     
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final BCryptPasswordEncoder encoder;
 
-    public UserService(UserRepository userRepository, RoleRepository roleRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public AuthService(UserRepository userRepository, RoleRepository roleRepository, BCryptPasswordEncoder encoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
-        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.encoder = encoder;
     }
 
-    @Override
-    public void save(User user){
-        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+    public void register(User user){
+        user.setPassword(encoder.encode(user.getPassword()));
         
         // Default role assignment
         Role userRole = roleRepository.findByName("ROLE_USER");
@@ -40,13 +41,13 @@ public class UserService implements IUserService{
         userRepository.save(user);
     }
 
-    @Override
     public User findByEmail(String email){
         return userRepository.findByEmail(email);
     }
 
-    @Override
     public List<User> findAllUsers(){
         return userRepository.findAll();
     }
+
+
 }
