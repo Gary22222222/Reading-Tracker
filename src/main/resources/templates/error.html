@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Error</title>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="alert alert-danger">
+            <h2>Error</h2>
+            <p th:text="${error} ?: 'An unexpected error occurred'"></p>
+            <div th:if="${error == 'Link already expired, resend link'}">
+                <a th:href="@{/forgot-password}" class="btn btn-warning">Resend Reset Link</a>
+            </div>
+            <a th:href="@{/}" class="btn btn-secondary mt-3">Return to Home</a>
+        </div>
+    </div>
+</body>
+</html>

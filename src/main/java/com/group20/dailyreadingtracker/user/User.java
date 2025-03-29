@@ -14,6 +14,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name="users")
@@ -22,14 +26,20 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(name="username", nullable=false, length=40)
+    @Column(name="username", nullable=false, length=40, unique=true)
     private String username;
 
-    @Column(nullable=false, unique=true, length=50)
+    @Column(nullable=false, unique=true)
+    @NotBlank(message = "Email cannot be empty")
+    @Email(message = "Invalid email format")
     private String email;
 
     @Column(nullable=false, length=64)
+    @NotBlank(message = "Password cannot be empty")
+    @Size(min = 8, max = 64, message = "Password must be 8-64 characters")
+    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).*$", message = "Password must contain at least 1 digit, 1 lowercase, and 1 uppercase letter")
     private String password;
+    
     private boolean isEnabled = false; // Email verification
 
     @ManyToMany(fetch=FetchType.EAGER)

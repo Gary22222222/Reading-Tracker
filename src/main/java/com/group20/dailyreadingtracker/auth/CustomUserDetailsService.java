@@ -1,9 +1,9 @@
 package com.group20.dailyreadingtracker.auth;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,19 +18,27 @@ import com.group20.dailyreadingtracker.user.UserRepository;
 @Service
 public class CustomUserDetailsService implements UserDetailsService{
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+
+    public CustomUserDetailsService(UserRepository userRepository){
+        this.userRepository = userRepository;
+    }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException{
-        User user = userRepository.findByEmail(email);
-        if (user == null) throw new UsernameNotFoundException("Invalide email or passowrd.");
+        Optional<User> optionalUser = userRepository.findByEmail(email);
 
-        Set<GrantedAuthority> grantedAuthorities = new HashSet<>();
+        if (!optionalUser.isPresent())
+            throw new UsernameNotFoundException("Invalid email or password");
+
+        User user = optionalUser.get();
+
+        Set<GrantedAuthority> authorities = new HashSet<>();
         for (Role role : user.getRoles())
-            grantedAuthorities.add(new SimpleGrantedAuthority(role.getName()));
-        
-        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), grantedAuthorities);
+            authorities.add(new SimpleGrantedAuthority(role.getName()));
+
+        return new org.springframework.security.core.userdetails.User(
+            user.getEmail(), user.getPassword(), authorities);
     }
     
 }

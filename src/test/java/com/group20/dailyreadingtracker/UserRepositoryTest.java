@@ -1,6 +1,9 @@
 package com.group20.dailyreadingtracker;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -21,7 +24,7 @@ public class UserRepositoryTest {
     private TestEntityManager entityManager;
 
     @Autowired
-    private UserRepository repo;
+    private UserRepository userRepository;
 
     @Test
     public void testCreateUser(){
@@ -30,9 +33,23 @@ public class UserRepositoryTest {
         user.setPassword("Iamnottellingyou8");
         user.setUsername("slooonya");
 
-        User savedUser = repo.save(user);
+        User savedUser = userRepository.save(user);
         User existUser = entityManager.find(User.class, savedUser.getId());
 
         assertEquals(existUser.getEmail(), user.getEmail());
+    }
+
+    @Test
+    public void testFindByEmail(){
+        User savedUser = new User();
+        savedUser.setEmail("test@mail.com");
+        savedUser.setPassword("Password123");
+
+        entityManager.persist(savedUser);
+
+        Optional<User> foundUser = userRepository.findByEmail("test@mail.com");
+        
+        assertTrue(foundUser.isPresent());
+        assertEquals(savedUser.getId(), foundUser.get().getId());
     }
 }
