@@ -1,5 +1,6 @@
 package com.group20.dailyreadingtracker.readinglog;
 
+import com.group20.dailyreadingtracker.role.RoleRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ReadingLogController {
     private final ReadingLogService service;
+    // 添加角色检查工具类或直接使用SecurityContext
+    private final RoleRepository roleRepository;
+
 
     // 🔹 获取当前用户的所有阅读日志
     @GetMapping

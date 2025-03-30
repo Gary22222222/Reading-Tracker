@@ -1,6 +1,7 @@
 package com.group20.dailyreadingtracker.readinglog;
 
-
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import com.group20.dailyreadingtracker.user.User;
 import com.group20.dailyreadingtracker.violationlog.ViolationLog;
@@ -41,17 +42,32 @@ public class ReadingLogService {
     public List<ReadingLog> getUserLogs(Long userId) {
         return readingLogRepository.findByUserId(userId);
     }
+    // 在deleteLog方法中添加管理员权限检查
     @Transactional
     public void deleteLog(long userId, long logId) {
         ReadingLog log = readingLogRepository.findById(logId)
                 .orElseThrow(() -> new EntityNotFoundException("Log not found"));
 
+        // 如果是管理员，直接允许删除
+        if (isAdmin(userId)) {
+            readingLogRepository.delete(log);
+            return;
+        }
+
+        // 普通用户只能删除自己的日志
         if (!log.getUser().getId().equals(userId)) {
             throw new SecurityException("You can only delete your own logs");
         }
-
         readingLogRepository.delete(log);
     }
+    // 检查用户是否为管理员
+    private boolean isAdmin(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        return user.getRoles().stream()
+                .anyMatch(role -> role.getName().equals("ROLE_ADMIN"));
+    }
+
     // 🔹 查询某个用户的所有阅读日志
     public List<ReadingLog> getAllLogsByUser(Long userId) {
         return readingLogRepository.findByUserId(userId);
@@ -85,18 +101,37 @@ public class ReadingLogService {
     /**
      * 管理员删除违规日志
      */
-    public void deleteInappropriateLog(Long logId) {
-        ReadingLog log = readingLogRepository.findById(logId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reading log not found"));
 
-        // 保存到 ViolationLogRepository
-        ViolationLog violationLog = new ViolationLog();
-        violationLog.setLogId(log.getId());
+
+    @Transactional
+    public void deleteInappropriateLog(Long logId) {
+        // 1. 获取当前登录用户的邮箱
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String email = userDetails.getUsername(); // 假设 UserDetails 中的 username 是邮箱
+
+        // 2. 查询用户（手动处理 null 情况）
+        User currentUser = userRepository.findByEmail(email);
+        if (currentUser == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found with email: " + email);
+        }
+
+        // 3. 检查是否为管理员
+        boolean isAdmin = currentUser.getRoles().stream()
+                .anyMatch(role -> "ROLE_ADMIN".equals(role.getName()));
+        if (!isAdmin) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only admins can delete logs");
+        }
+
+        // 4. 删除日志的逻辑
+        ReadingLog log = readingLogRepository.findById(logId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Log not found"));
+
+        // 5. 记录违规日志
+        ViolationLog violationLog = new ViolationLog(log);
         violationLog.setReason("Inappropriate content");
         violationLogRepository.save(violationLog);
 
-        // 删除日志
+        // 6. 删除原日志
         readingLogRepository.delete(log);
     }
-
 }
