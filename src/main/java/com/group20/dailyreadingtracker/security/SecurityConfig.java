@@ -18,26 +18,31 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
+        return authenticationConfiguration.getAuthenticationManager(); 
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/register", "/login", "/css/**", "/js/**", "/forgotPassword", "/api/reading-logs").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .defaultSuccessUrl("/home")
-                        .failureUrl("/login?error=true")
-                        .permitAll()
-                )
-                .logout(logout -> logout
-                        .logoutSuccessUrl("/login?logout=true")
-                        .permitAll()
-                );
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/register", "/login", "/css/**", "/js/**", "/forgot-password", "/reset-password**").permitAll() 
+                .anyRequest().authenticated()
+            )
+
+            .formLogin(form -> form
+                .loginPage("/login")
+                .defaultSuccessUrl("/home") 
+                .failureUrl("/login?error=true")
+                .permitAll()
+            )
+            
+            .logout(logout -> logout
+                .logoutSuccessUrl("/login?logout=true")
+                .permitAll()
+            );
+
         return http.build();
     }
+
+
 }
