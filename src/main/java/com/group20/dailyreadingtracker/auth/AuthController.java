@@ -1,39 +1,31 @@
 package com.group20.dailyreadingtracker.auth;
 
-import java.util.Optional;
-import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import com.group20.dailyreadingtracker.security.SecurityService;
 import com.group20.dailyreadingtracker.user.User;
 
-import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Controller
 public class AuthController {
     
     private final AuthService authService;
     private final SecurityService securityService;
-    private final EmailService emailService;
-    private final PasswordResetTokenService passwordResetTokenService;
-    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+    public final VerificationTokenService verificationTokenService;
 
-    public AuthController(AuthService authService, SecurityService securityService,  EmailService emailService, PasswordResetTokenService passwordResetTokenService){
+    public AuthController(AuthService authService, SecurityService securityService, VerificationTokenService verificationTokenService){
         this.authService = authService;
         this.securityService = securityService;
-        this.emailService = emailService;
-        this.passwordResetTokenService = passwordResetTokenService;
+        this.verificationTokenService = verificationTokenService;
     }
 
     @GetMapping("/register")
@@ -47,12 +39,10 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public String processRegistration(@ModelAttribute("user") User user) {
+    public String processRegistration(@ModelAttribute("user") User user, HttpServletRequest request) {
         authService.register(user);
-
-        securityService.autoLogin(user.getEmail(), user.getPassword());
-
-        return "redirect:/home";
+        verificationTokenService.createVerificationForRegisteredUser(user.getEmail(), request);
+        return "redirect:/verify-pending?email=" + user.getEmail();
     }
 
     @GetMapping("/login")
@@ -69,38 +59,13 @@ public class AuthController {
         return "login";
     }
 
-    @GetMapping("/forgot-password")
-    public String showForgotPasswordForm(){
-        if (securityService.isAuthenticated()) {
-            return "redirect:/home";
+    @GetMapping("/logout")
+    public String logout(HttpServletRequest request, HttpServletResponse response) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null) {
+            new SecurityContextLogoutHandler().logout(request, response, auth);
         }
-        return "forgot-password";
+        return "redirect:/login?logout=true";
     }
    
-    @RateLimiter(name = "passwordResetLimiter")
-    @PostMapping("/forgot-password")
-    public ResponseEntity<String> requestPasswordReset(
-            @RequestParam String email, 
-            HttpServletRequest servletRequest) {
-        
-        Optional<User> user = authService.findByEmail(email);
-        
-        if (user.isPresent()) {
-            String token = UUID.randomUUID().toString();
-            passwordResetTokenService.createPasswordResetTokenForUser(user.get(), token);
-            
-            String resetUrl = authService.generatePasswordResetUrl(user.get(), servletRequest, token);
-            
-            try {
-                emailService.sendPasswordResetEmail(user.get(), resetUrl);
-                return ResponseEntity.ok("Password reset link sent to your email");
-            } catch (Exception e) {
-                logger.error("Failed to send password reset email", e);
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to send reset email. Please try again later.");
-            }
-        }
-        
-        return ResponseEntity.ok("If the email exists, a reset link has been sent");
-    }
 }

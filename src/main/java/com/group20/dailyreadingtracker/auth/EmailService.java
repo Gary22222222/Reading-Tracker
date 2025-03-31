@@ -4,6 +4,7 @@ import java.io.UnsupportedEncodingException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -13,18 +14,49 @@ import com.group20.dailyreadingtracker.user.User;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
-import jakarta.servlet.http.HttpServletRequest;
+
+// Handles HTML emails sending for verification and password reset
 
 @Service
 public class EmailService {
 
     private final JavaMailSender mailSender;
-    private final String senderEmail = "sloooonya@yandex.com";
+
+    @Value("${spring.mail.username}")
+    private String senderEmail;
+
     private final String senderName = "Daily Reading Tracker";
     private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
     public EmailService(JavaMailSender mailSender){
         this.mailSender = mailSender;
+    }
+
+    public boolean sendVerificationEmail(User user, String verificationUrl){
+        String subject = "Verify Your Email Address";
+        String content = String.format("""
+            <html>
+                <body>
+                    <p>Dear %s,</p>
+                    <p>Thank you for registering with Daily Reading Tracker!</p>
+                    <p>Please verify your email address by clicking the link below:</p>
+                    <p><a href="%s">Verify Email</a></p>
+                    <p>Or copy this URL to your browser: %s</p>
+                    <p>This link will expire in 24 hours.</p>
+                    <p>If you didn't create this account, please ignore this email.</p>
+                    <p>Best regards,<br>%s Team</p>
+                </body>
+            </html>
+            """, user.getUsername(), verificationUrl, verificationUrl, senderName);
+        
+        try {
+            sendHtmlEmail(user.getEmail(), subject, content);
+            logger.info("Verification email sent to {} with link: {}", user.getEmail(), verificationUrl);
+            return true;
+        } catch (MessagingException | UnsupportedEncodingException e) {
+            logger.error("Failed to send verification email to {}", user.getEmail(), e);
+            return false;
+        }
     }
 
     public void sendPasswordResetEmail(User user, String url) {
@@ -59,19 +91,12 @@ public class EmailService {
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
-        
             mailSender.send(message);
         } catch (UnsupportedEncodingException e) {
             helper.setFrom(senderEmail);
             mailSender.send(message);
             logger.warn("Used simple from address due to encoding issues");
         }
-    }
-
-    public String generatePasswordResetUrl(User user, HttpServletRequest request, String token) {
-        String baseUrl = request.getRequestURL().toString()
-                .replace(request.getServletPath(), ""); 
-        return baseUrl + "/reset-password?token=" + token;
     }
 
     public class EmailException extends RuntimeException {

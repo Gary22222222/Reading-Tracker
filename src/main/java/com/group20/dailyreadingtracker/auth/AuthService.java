@@ -6,13 +6,14 @@ import java.util.Optional;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.group20.dailyreadingtracker.role.Role;
 import com.group20.dailyreadingtracker.role.RoleRepository;
 import com.group20.dailyreadingtracker.user.User;
 import com.group20.dailyreadingtracker.user.UserRepository;
 
-import jakarta.servlet.http.HttpServletRequest;
+// Handles user authentication and registration business logic
 
 @Service
 public class AuthService implements IAuthService{
@@ -20,42 +21,38 @@ public class AuthService implements IAuthService{
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder encoder;
-    private final PasswordResetTokenService passwordResetTokenService;
 
-    public AuthService(UserRepository userRepository, RoleRepository roleRepository, BCryptPasswordEncoder encoder, PasswordResetTokenService passwordResetTokenService) {
+    public AuthService(UserRepository userRepository, RoleRepository roleRepository, BCryptPasswordEncoder encoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.encoder = encoder;
-        this.passwordResetTokenService = passwordResetTokenService;
-}
+    }
 
+    @Transactional
     @Override
     public void register(User user){
+        if (userRepository.existsByEmail(user.getEmail()) || 
+            userRepository.existsByUsername(user.getUsername())) {
+            throw new IllegalArgumentException("User already exists");
+        }
+
         user.setPassword(encoder.encode(user.getPassword()));
         
         // Default role assignment
-        Role userRole = roleRepository.findByName("ROLE_USER");
-        if (userRole == null){
-            userRole = new Role();
-            userRole.setName("ROLE_USER");
-            roleRepository.save(userRole);
+        if (user.getRoles() == null) {
+            user.setRoles(new HashSet<>());
         }
 
-        user.setRoles(new HashSet<>());
+        Role userRole = roleRepository.findByName("ROLE_USER")
+        .orElseGet(() -> {
+            Role newRole = new Role("ROLE_USER");
+            return roleRepository.save(newRole);
+        });
+
+        user.getRoles().clear();
         user.getRoles().add(userRole);
+
         userRepository.save(user);
-    }
-
-    @Override
-    public void createPasswordResetTokenForUser(User user, String passwordToken){
-        passwordResetTokenService.createPasswordResetTokenForUser(user, passwordToken);
-    }
-
-    @Override
-    public String generatePasswordResetUrl(User user, HttpServletRequest request, String token) {
-        String baseUrl = request.getRequestURL().toString()
-                .replace(request.getServletPath(), "");
-        return baseUrl + "/reset-password?token=" + token;
     }
     
     @Override

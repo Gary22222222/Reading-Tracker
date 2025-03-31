@@ -1,7 +1,6 @@
 package com.group20.dailyreadingtracker.auth;
 
-import java.util.Calendar;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import com.group20.dailyreadingtracker.user.User;
 
@@ -17,7 +16,7 @@ import jakarta.persistence.OneToOne;
 @Entity
 public final class PasswordResetToken {
 
-    private static final int EXPIRATION_TIME = 1440;
+    private static final int EXPIRATION_TIME = 60;
 
     @Id
     @GeneratedValue(strategy=GenerationType.AUTO)
@@ -26,7 +25,7 @@ public final class PasswordResetToken {
     @Column(unique=true)
     private String token;
 
-    private Date expirationTime;
+    private LocalDateTime expirationTime;
     
     @OneToOne(targetEntity=User.class, fetch=FetchType.EAGER)
     @JoinColumn(nullable=false, name="user_id", unique=true)
@@ -63,11 +62,11 @@ public final class PasswordResetToken {
         this.token = token;
     }
 
-    public Date getExpirationTime(){
+    public LocalDateTime getExpirationTime(){
         return expirationTime;
     }
 
-    public void setExpirationTime(Date expirationTime){
+    public void setExpirationTime(LocalDateTime expirationTime){
         this.expirationTime = expirationTime;
     }
 
@@ -79,14 +78,11 @@ public final class PasswordResetToken {
         this.user = user;
     }
 
-    public Date getTokenExpirationTime() {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(new Date().getTime());
-        calendar.add(Calendar.MINUTE, EXPIRATION_TIME);
-        return new Date(calendar.getTime().getTime());
+    public LocalDateTime getTokenExpirationTime() {
+        return LocalDateTime.now().plusMinutes(EXPIRATION_TIME);
     }
-
-    public boolean isExpired(){
-        return new Date().after(this.expirationTime);
+    
+    public boolean isExpired() {
+        return LocalDateTime.now().isAfter(this.expirationTime);
     }
 }
