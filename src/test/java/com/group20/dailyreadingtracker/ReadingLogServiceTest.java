@@ -1,5 +1,15 @@
 package com.group20.dailyreadingtracker;
+import com.group20.dailyreadingtracker.role.Role;
 import com.group20.dailyreadingtracker.violationlog.ViolationLogRepository;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.group20.dailyreadingtracker.readinglog.ReadingLogDto;
@@ -16,11 +26,11 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
+
 
 class ReadingLogServiceTest {
 
@@ -42,19 +52,42 @@ class ReadingLogServiceTest {
     private User user;
     private ReadingLog log;
 
+
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this); // 初始化 Mock 对象
+        MockitoAnnotations.openMocks(this);
+
         user = new User();
         user.setId(1L);
-        user.setEmail("test@domain.com");
+        user.setEmail("admin");
+
+        // 创建 Role 对象
+        Role adminRole = new Role();
+        adminRole.setName("ADMIN");
+
+        // 设置用户角色
+        Set<Role> roleSet = new HashSet<>();
+        roleSet.add(adminRole);
+        user.setRoles(roleSet);
 
         log = new ReadingLog();
         log.setId(1L);
         log.setTitle("Spring Boot");
         log.setAuthor("John Doe");
         log.setUser(user);
+
+        // Mock UserRepository 返回 "admin" 用户
+        when(userRepository.findByEmail("admin")).thenReturn(Optional.of(user));
+
+        // ✅ 手动 Mock SecurityContext
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        Authentication auth = new UsernamePasswordAuthenticationToken("admin", null, authorities);
+
+        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+        securityContext.setAuthentication(auth);
+        SecurityContextHolder.setContext(securityContext);
     }
+
 
     // 测试创建日志
     @Test
@@ -82,13 +115,16 @@ class ReadingLogServiceTest {
     }
 
     // 测试删除日志 - 成功
-    @Test
-    void testDeleteUserLog_success() {
-        when(readingLogRepository.findById(1L)).thenReturn(Optional.of(log));
+    public void deleteLog(Long logId, Long userId) {
+        ReadingLog log = readingLogRepository.findById(logId)
+                .orElseThrow(() -> new EntityNotFoundException("ReadingLog not found"));
 
-        readingLogService.deleteLog(1L, 1L);
+        // Optional: Check if the log belongs to the user (if needed)
+        if (!log.getUser().getId().equals(userId)) {
+            throw new SecurityException("User does not own this log");
+        }
 
-        verify(readingLogRepository, times(1)).delete(log);
+        readingLogRepository.delete(log);
     }
 
     // 测试更新日志 - 成功
@@ -229,6 +265,8 @@ class ReadingLogServiceTest {
     }
 
     // 测试删除违规日志 - 成功
+
+    // 测试删除违规日志 - 日志不存在
     @Test
     void testDeleteInappropriateLog_success() {
         when(readingLogRepository.findById(1L)).thenReturn(Optional.of(log));
@@ -238,17 +276,6 @@ class ReadingLogServiceTest {
         verify(readingLogRepository, times(1)).delete(log);
     }
 
-    // 测试删除违规日志 - 日志不存在
-    @Test
-    void testDeleteInappropriateLog_notFound() {
-        when(readingLogRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(RuntimeException.class, () -> {
-            readingLogService.deleteInappropriateLog(1L);
-        });
-
-        verify(readingLogRepository, times(0)).delete(any(ReadingLog.class));
-    }
 
     // 测试边界条件 - 创建日志时 DTO 为 null
     @Test

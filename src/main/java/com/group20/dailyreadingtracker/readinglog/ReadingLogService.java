@@ -1,5 +1,6 @@
 package com.group20.dailyreadingtracker.readinglog;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -103,35 +104,29 @@ public class ReadingLogService {
      */
 
 
-    @Transactional
     public void deleteInappropriateLog(Long logId) {
-        // 1. 获取当前登录用户的邮箱
-        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String email = userDetails.getUsername(); // 假设 UserDetails 中的 username 是邮箱
-
-        // 2. 查询用户（手动处理 null 情况）
-        User currentUser = userRepository.findByEmail(email);
-        if (currentUser == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found with email: " + email);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
 
-        // 3. 检查是否为管理员
-        boolean isAdmin = currentUser.getRoles().stream()
-                .anyMatch(role -> "ROLE_ADMIN".equals(role.getName()));
+        String email = authentication.getName();
+        User admin = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found with email: " + email));
+
+        //  确保权限检查正确
+        boolean isAdmin = admin.getRoles().stream()
+                .anyMatch(role -> "ADMIN".equals(role.getName()));
+
         if (!isAdmin) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only admins can delete logs");
         }
 
-        // 4. 删除日志的逻辑
         ReadingLog log = readingLogRepository.findById(logId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Log not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reading log not found"));
 
-        // 5. 记录违规日志
-        ViolationLog violationLog = new ViolationLog(log);
-        violationLog.setReason("Inappropriate content");
-        violationLogRepository.save(violationLog);
-
-        // 6. 删除原日志
         readingLogRepository.delete(log);
     }
+
+
 }
