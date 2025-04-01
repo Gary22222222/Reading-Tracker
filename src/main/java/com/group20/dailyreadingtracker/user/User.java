@@ -2,8 +2,10 @@ package com.group20.dailyreadingtracker.user;
 
 import java.util.Set;
 
+import com.group20.dailyreadingtracker.auth.VerificationToken;
 import com.group20.dailyreadingtracker.role.Role;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -13,6 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -24,7 +27,7 @@ import jakarta.validation.constraints.Size;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private long id;
 
     @Column(name="username", nullable=false, length=40, unique=true)
     private String username;
@@ -40,7 +43,11 @@ public class User {
     @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).*$", message = "Password must contain at least 1 digit, 1 lowercase, and 1 uppercase letter")
     private String password;
     
+    @Column(nullable = false)
     private boolean isEnabled = false; // Email verification
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private VerificationToken verificationToken;
 
     @ManyToMany(fetch=FetchType.EAGER)
     @JoinTable(
@@ -50,22 +57,25 @@ public class User {
     )
     private Set<Role> roles;
 
-    private boolean locked = false;
+    @Column(name ="avatar_file_name")
+    private String avatarFileName;
 
     public User(){}
 
-    public User(Long id, String username, String email, String password,
-            boolean isEnabled, Set<Role> roles) {
+    public User(long id, String username, String email, String password,
+            boolean isEnabled, VerificationToken verificationToken, Set<Role> roles, String avatarFileName) {
                 super();
                 this.id = id;
                 this.username = username;
                 this.email = email;
                 this.password = password;
                 this.isEnabled = isEnabled;
+                this.verificationToken = verificationToken;
                 this.roles = roles;
+                this.avatarFileName = avatarFileName;
     }
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
@@ -96,12 +106,20 @@ public class User {
         this.password = password;
     }
 
-    public boolean isEnabled() {
+    public boolean getIsEnabled() {
         return isEnabled;
     }
 
-    public void setEnabled(boolean isEnabled) {
+    public void setIsEnabled(boolean isEnabled) {
         this.isEnabled = isEnabled;
+    }
+
+    public VerificationToken getVerificationToken(){
+        return verificationToken;
+    }
+
+    public void setVerificationToken(VerificationToken verificationToken){
+        this.verificationToken = verificationToken;
     }
 
     public Set<Role> getRoles() {
@@ -112,13 +130,11 @@ public class User {
         this.roles = roles;
     }
 
-    public void setLocked(boolean locked) {
-        this.locked = locked;
+    public String getAvatarFilename(){
+        return avatarFileName;
     }
 
-    public boolean isLocked() {
-        return locked;
+    public void setAvatarFilename(String avatarFileName){
+        this.avatarFileName = avatarFileName;
     }
-
-
 }

@@ -1,8 +1,8 @@
 package com.group20.dailyreadingtracker.user;
 
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController
 public class UserController {
 
     // Use it for profile management
