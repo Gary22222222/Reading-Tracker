@@ -1,0 +1,111 @@
+/* 通用样式 */
+body {
+    font-family: 'Arial', sans-serif;
+    background: #f4f7f6;
+    margin: 20px;
+    padding: 20px;
+    text-align: center;
+}
+
+/* 标题 */
+h1 {
+    color: #333;
+    font-size: 28px;
+    margin-bottom: 20px;
+}
+
+/* 日志容器 */
+#logs {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+/* 单个日志条目 */
+.log-entry {
+    background: #ffffff;
+    border-left: 5px solid #007bff;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+.log-entry h3 {
+    margin: 0;
+    color: #007bff;
+}
+
+.log-entry p {
+    margin: 5px 0;
+    color: #555;
+}
+
+/* 删除按钮 */
+.log-entry button {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.log-entry button:hover {
+    background: #c82333;
+}
+
+/* 表单容器 */
+form {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 15px;
+    background: #ffffff;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+}
+
+/* 表单输入框 */
+input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+textarea {
+    resize: vertical;
+    height: 80px;
+}
+
+/* 提交按钮 */
+button[type="submit"] {
+    background: #28a745;
+    color: white;
+    font-size: 16px;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.3s;
+}
+
+button[type="submit"]:hover {
+    background: #218838;
+}
+
+/* 响应式设计 */
+@media (max-width: 600px) {
+    body {
+        margin: 10px;
+        padding: 10px;
+    }
+
+    #logs, form {
+        width: 90%;
+    }
+}
