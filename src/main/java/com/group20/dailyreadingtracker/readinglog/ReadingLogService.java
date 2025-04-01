@@ -56,7 +56,7 @@ public class ReadingLogService {
         }
 
         // 普通用户只能删除自己的日志
-        if (!log.getUser().getId().equals(userId)) {
+        if (!(log.getUser().getId()==userId)) {
             throw new SecurityException("You can only delete your own logs");
         }
         readingLogRepository.delete(log);
@@ -76,7 +76,7 @@ public class ReadingLogService {
     // 🔹 查询某个用户的单个阅读日志
     public ReadingLog getLogById(Long logId, Long userId) {
         return readingLogRepository.findById(logId)
-                .filter(log -> log.getUser().getId().equals(userId))
+                .filter(log -> log.getUser().getId()==userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reading log not found or unauthorized"));
     }
 
@@ -84,7 +84,7 @@ public class ReadingLogService {
     public ReadingLog updateLog(Long userId, Long logId, ReadingLogDto dto) {
         // 先检查日志是否存在，并且属于该用户
         ReadingLog log = readingLogRepository.findById(logId)
-                .filter(l -> l.getUser().getId().equals(userId))
+                .filter(l -> l.getUser().getId()==userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reading log not found or unauthorized"));
 
         // 更新日志内容

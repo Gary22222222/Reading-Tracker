@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reading Log Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .log-entry {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .log-entry h3 {
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+<h1>Reading Log Tracker</h1>
+<div id="logs"></div>
+
+<h2>Add New Log</h2>
+<form id="logForm">
+  <input type="text" id="title" placeholder="Title" required>
+  <input type="text" id="author" placeholder="Author" required>
+  <input type="date" id="date" required>
+  <input type="number" id="timeSpent" placeholder="Time Spent (minutes)" required>
+  <textarea id="notes" placeholder="Notes"></textarea>
+  <button type="submit">Add Log</button>
+</form>
+
+<script src="app.js"></script>
+</body>
+</html>

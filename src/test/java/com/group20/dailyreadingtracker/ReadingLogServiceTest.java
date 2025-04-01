@@ -120,7 +120,7 @@ class ReadingLogServiceTest {
                 .orElseThrow(() -> new EntityNotFoundException("ReadingLog not found"));
 
         // Optional: Check if the log belongs to the user (if needed)
-        if (!log.getUser().getId().equals(userId)) {
+        if (!(log.getUser().getId()==userId)) {
             throw new SecurityException("User does not own this log");
         }
 
