@@ -8,6 +8,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.group20.dailyreadingtracker.security.SecurityService;
 import com.group20.dailyreadingtracker.user.User;
@@ -20,12 +22,10 @@ public class AuthController {
     
     private final AuthService authService;
     private final SecurityService securityService;
-    public final VerificationTokenService verificationTokenService;
 
     public AuthController(AuthService authService, SecurityService securityService, VerificationTokenService verificationTokenService){
         this.authService = authService;
         this.securityService = securityService;
-        this.verificationTokenService = verificationTokenService;
     }
 
     @GetMapping("/register")
@@ -39,9 +39,8 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public String processRegistration(@ModelAttribute("user") User user, HttpServletRequest request) {
-        authService.register(user);
-        verificationTokenService.createVerificationForRegisteredUser(user.getEmail(), request);
+    public String processRegistration(@ModelAttribute("user") User user, @RequestParam(required = false) MultipartFile avatar, HttpServletRequest request) {
+        authService.register(user, avatar, request);
         return "redirect:/verify-pending?email=" + user.getEmail();
     }
 

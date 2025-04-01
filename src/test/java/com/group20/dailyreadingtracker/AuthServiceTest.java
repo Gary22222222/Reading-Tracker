@@ -1,5 +1,6 @@
 package com.group20.dailyreadingtracker;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.annotation.Rollback;
 
@@ -44,6 +46,8 @@ public class AuthServiceTest {
     @Autowired
     private AuthService authService;
 
+    private MockHttpServletRequest request;
+
     @BeforeEach
     public void setup(){
         userRepository.deleteAll();
@@ -56,12 +60,12 @@ public class AuthServiceTest {
     }
 
     @Test
-    public void testRegisterValidUser(){
+    public void testRegisterValidUser() throws IOException{
         User user = new User();
         user.setEmail("test@mail.com");
         user.setPassword("Password123");
 
-        authService.register(user);
+        authService.register(user, null, request);
 
         User savedUser = userRepository.findByEmail("test@mail.com").orElse(null);
         
@@ -73,6 +77,8 @@ public class AuthServiceTest {
         assertEquals(1, savedUser.getRoles().size(), "User should have one role");
         assertTrue(savedUser.getRoles().stream()
             .anyMatch(r -> r.getName().equals("ROLE_USER")), "User should have ROLE_USER");
+
+            assertNotNull(savedUser.getAvatarFilename(), "Avatar filename should be set");
     }
 
     @Test

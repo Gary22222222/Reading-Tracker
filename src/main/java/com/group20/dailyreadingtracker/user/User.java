@@ -57,10 +57,13 @@ public class User {
     )
     private Set<Role> roles;
 
+    @Column(name ="avatar_file_name")
+    private String avatarFileName;
+
     public User(){}
 
     public User(long id, String username, String email, String password,
-            boolean isEnabled, VerificationToken verificationToken, Set<Role> roles) {
+            boolean isEnabled, VerificationToken verificationToken, Set<Role> roles, String avatarFileName) {
                 super();
                 this.id = id;
                 this.username = username;
@@ -69,6 +72,7 @@ public class User {
                 this.isEnabled = isEnabled;
                 this.verificationToken = verificationToken;
                 this.roles = roles;
+                this.avatarFileName = avatarFileName;
     }
 
     public long getId() {
@@ -124,5 +128,13 @@ public class User {
 
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
+    }
+
+    public String getAvatarFilename(){
+        return avatarFileName;
+    }
+
+    public void setAvatarFilename(String avatarFileName){
+        this.avatarFileName = avatarFileName;
     }
 }

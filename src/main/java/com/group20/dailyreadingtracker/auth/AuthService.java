@@ -1,5 +1,6 @@
 package com.group20.dailyreadingtracker.auth;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -7,11 +8,14 @@ import java.util.Optional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.group20.dailyreadingtracker.role.Role;
 import com.group20.dailyreadingtracker.role.RoleRepository;
 import com.group20.dailyreadingtracker.user.User;
 import com.group20.dailyreadingtracker.user.UserRepository;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 // Handles user authentication and registration business logic
 
@@ -21,22 +25,35 @@ public class AuthService implements IAuthService{
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder encoder;
+    private final FileStorageService fileStorageService;
+    private final VerificationTokenService verificationTokenService;
 
-    public AuthService(UserRepository userRepository, RoleRepository roleRepository, BCryptPasswordEncoder encoder) {
+    public AuthService(UserRepository userRepository, RoleRepository roleRepository, BCryptPasswordEncoder encoder, FileStorageService fileStorageService, VerificationTokenService verificationTokenService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.encoder = encoder;
+        this.fileStorageService = fileStorageService;
+        this.verificationTokenService = verificationTokenService;
     }
 
     @Transactional
     @Override
-    public void register(User user){
+    public void register(User user, MultipartFile avatar, HttpServletRequest request){
         if (userRepository.existsByEmail(user.getEmail()) || 
             userRepository.existsByUsername(user.getUsername())) {
             throw new IllegalArgumentException("User already exists");
         }
 
         user.setPassword(encoder.encode(user.getPassword()));
+
+        if (avatar != null && !avatar.isEmpty()) {
+            try {
+                String avatarFilename = fileStorageService.storeAvatar(avatar, user.getUsername());
+                user.setAvatarFilename(avatarFilename);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to store avatar", e);
+            }
+        }
         
         // Default role assignment
         if (user.getRoles() == null) {
@@ -53,6 +70,9 @@ public class AuthService implements IAuthService{
         user.getRoles().add(userRole);
 
         userRepository.save(user);
+
+        if (request != null)
+            verificationTokenService.createVerificationForRegisteredUser(user.getEmail(), request);
     }
     
     @Override
