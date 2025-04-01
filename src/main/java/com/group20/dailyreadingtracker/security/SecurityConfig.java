@@ -46,6 +46,7 @@ public class SecurityConfig {
                     "/verify-pending",
                     "/css/**",
                     "/js/**",
+                    "/images/**",
                     "/forgot-password",
                     "/reset-password**",
                     "/logout" 
