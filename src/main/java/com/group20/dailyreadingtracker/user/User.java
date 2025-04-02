@@ -1,22 +1,13 @@
 package com.group20.dailyreadingtracker.user;
 
+import java.util.List;
 import java.util.Set;
 
 import com.group20.dailyreadingtracker.auth.VerificationToken;
+import com.group20.dailyreadingtracker.readinglog.ReadingLog;
 import com.group20.dailyreadingtracker.role.Role;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -56,6 +47,10 @@ public class User {
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReadingLog> readingLogs;
+
 
     @Column(name ="avatar_file_name")
     private String avatarFileName;

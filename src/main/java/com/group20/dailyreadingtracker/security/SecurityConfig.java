@@ -1,5 +1,6 @@
 package com.group20.dailyreadingtracker.security;
 
+import com.group20.dailyreadingtracker.user.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -7,13 +8,18 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 import com.group20.dailyreadingtracker.user.User;
+
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
@@ -106,4 +112,16 @@ public class SecurityConfig {
             }
         };
     }
+    @Bean
+    public UserDetailsService userDetailsService(UserRepository userRepository) {
+        return username -> userRepository.findByUsername(username)
+                .map(user -> new org.springframework.security.core.userdetails.User(
+                        user.getUsername(),
+                        user.getPassword(),
+                        // 添加用户权限/角色
+                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+                ))
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
 }

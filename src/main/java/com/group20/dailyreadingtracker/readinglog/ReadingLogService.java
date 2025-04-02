@@ -74,11 +74,7 @@ public class ReadingLogService {
         return readingLogRepository.findByUserId(userId);
     }
     // 🔹 查询某个用户的单个阅读日志
-    public ReadingLog getLogById(Long logId, Long userId) {
-        return readingLogRepository.findById(logId)
-                .filter(log -> log.getUser().getId()==userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reading log not found or unauthorized"));
-    }
+
 
     // 🔹 更新阅读日志
     public ReadingLog updateLog(Long userId, Long logId, ReadingLogDto dto) {
@@ -127,6 +123,15 @@ public class ReadingLogService {
 
         readingLogRepository.delete(log);
     }
+    public ReadingLog getLogById(Long userId, Long logId) {
+        ReadingLog log = readingLogRepository.findById(logId)
+                .orElseThrow(() -> new IllegalArgumentException("Reading log not found"));
+        if (!(log.getUser().getId()==userId)) {
+            throw new SecurityException("Access denied");
+        }
+        return log;
+    }
+
 
 
 }

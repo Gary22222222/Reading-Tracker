@@ -35,5 +35,6 @@ public class ReadingLog {
     @CreatedDate
     private LocalDateTime createdAt;
 
+
 }
 

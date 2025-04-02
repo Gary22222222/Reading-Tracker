@@ -1,8 +1,12 @@
 package com.group20.dailyreadingtracker.readinglog;
 
 import com.group20.dailyreadingtracker.role.RoleRepository;
+import com.group20.dailyreadingtracker.user.User;
+import com.group20.dailyreadingtracker.user.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -18,6 +22,8 @@ public class ReadingLogController {
     private final ReadingLogService service;
     // 添加角色检查工具类或直接使用SecurityContext
     private final RoleRepository roleRepository;
+    @Autowired
+    private UserRepository userRepository;
 
 
     // 🔹 获取当前用户的所有阅读日志
@@ -94,12 +100,14 @@ public class ReadingLogController {
     }
 
     private Long getUserIdFromPrincipal(Principal principal) {
-        try {
-            return Long.valueOf(principal.getName());
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid user ID format");
-        }
+        String username = principal.getName(); // 获取用户名
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new SecurityException("User not found"));
+        return user.getId(); // 返回用户 ID
     }
+
+
+
     @RestControllerAdvice
     public class GlobalExceptionHandler {
 
@@ -107,6 +115,10 @@ public class ReadingLogController {
         public ResponseEntity<?> handleMaxSizeException(MaxUploadSizeExceededException ex) {
             return ResponseEntity.status(413).body(Map.of("error", "Payload too large"));
         }
+    }
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", ex.getMessage()));
     }
 
 
