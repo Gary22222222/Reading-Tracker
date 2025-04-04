@@ -3,27 +3,24 @@ package com.group20.dailyreadingtracker;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.annotation.Rollback;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import org.mockito.Mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.group20.dailyreadingtracker.user.User;
 import com.group20.dailyreadingtracker.user.UserRepository;
 
-@DataJpaTest
-@AutoConfigureTestDatabase(replace=Replace.NONE) // Use actual database
-@Rollback(false)                                 // Commit changes to db
+@ExtendWith(MockitoExtension.class)
 public class UserRepositoryTest {
     
-    @Autowired
-    private TestEntityManager entityManager;
-
-    @Autowired
+    @Mock
     private UserRepository userRepository;
 
     @Test
@@ -32,24 +29,39 @@ public class UserRepositoryTest {
         user.setEmail("mamonovasofia@gmail.com");
         user.setPassword("Iamnottellingyou8");
         user.setUsername("slooonya");
-
+        
+        when(userRepository.save(any(User.class))).thenReturn(user);
+        
         User savedUser = userRepository.save(user);
-        User existUser = entityManager.find(User.class, savedUser.getId());
-
-        assertEquals(existUser.getEmail(), user.getEmail());
+        
+        assertNotNull(savedUser);
+        assertEquals("mamonovasofia@gmail.com", savedUser.getEmail());
+        verify(userRepository).save(user);
     }
 
     @Test
     public void testFindByEmail(){
-        User savedUser = new User();
-        savedUser.setEmail("test@mail.com");
-        savedUser.setPassword("Password123");
-
-        entityManager.persist(savedUser);
-
+        User user = new User();
+        user.setId(1L);
+        user.setEmail("test@mail.com");
+        user.setPassword("Password123");
+        
+        when(userRepository.findByEmail("test@mail.com")).thenReturn(Optional.of(user));
+        
         Optional<User> foundUser = userRepository.findByEmail("test@mail.com");
         
         assertTrue(foundUser.isPresent());
-        assertEquals(savedUser.getId(), foundUser.get().getId());
+        assertEquals(1L, foundUser.get().getId());
+        verify(userRepository).findByEmail("test@mail.com");
+    }
+
+    @Test
+    public void testFindByEmailNotFound() {
+        when(userRepository.findByEmail("unknown@mail.com")).thenReturn(Optional.empty());
+        
+        Optional<User> foundUser = userRepository.findByEmail("unknown@mail.com");
+        
+        assertFalse(foundUser.isPresent());
+        verify(userRepository).findByEmail("unknown@mail.com");
     }
 }

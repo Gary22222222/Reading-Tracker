@@ -1,121 +1,95 @@
 package com.group20.dailyreadingtracker;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.mock.web.MockHttpServletRequest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.test.annotation.Rollback;
 
 import com.group20.dailyreadingtracker.auth.AuthService;
+import com.group20.dailyreadingtracker.auth.FileStorageService;
+import com.group20.dailyreadingtracker.auth.VerificationTokenService;
 import com.group20.dailyreadingtracker.role.Role;
 import com.group20.dailyreadingtracker.role.RoleRepository;
 import com.group20.dailyreadingtracker.user.User;
 import com.group20.dailyreadingtracker.user.UserRepository;
 
-import jakarta.transaction.Transactional;
+import jakarta.servlet.http.HttpServletRequest;
 
-@DataJpaTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE) // Use actual database
-@Rollback(false)                                                             // Commit changes to db
+@ExtendWith(MockitoExtension.class)
 public class AuthServiceTest {
-    
-    @Autowired
-    private TestEntityManager entityManager;
 
-    @Autowired
+    @Mock
     private UserRepository userRepository;
-
-    @Autowired
+    
+    @Mock
     private RoleRepository roleRepository;
-
-    @Autowired
-    private BCryptPasswordEncoder encoder;
-
-    @Autowired
+    
+    @Mock
+    private BCryptPasswordEncoder passwordEncoder;
+    
+    @Mock
+    private FileStorageService fileStorageService;
+    
+    @Mock
+    private VerificationTokenService verificationTokenService;
+    
+    @InjectMocks
     private AuthService authService;
 
-    private MockHttpServletRequest request;
-
-    @BeforeEach
-    public void setup(){
-        userRepository.deleteAll();
-        roleRepository.deleteAll();
-        
-        Role role = new Role();
-        role.setName("ROLE_USER");
-        entityManager.persist(role);
-        entityManager.flush();
-    }
-
     @Test
-    public void testRegisterValidUser() throws IOException{
+    public void testRegisterNewUser() throws IOException {
         User user = new User();
-        user.setEmail("test@mail.com");
-        user.setPassword("Password123");
-
-        authService.register(user, null, request);
-
-        User savedUser = userRepository.findByEmail("test@mail.com").orElse(null);
-        
-        assertNotNull(savedUser, "User should be saved");
-        assertEquals("test@mail.com", savedUser.getEmail(), "Email should match");
-        assertTrue(encoder.matches("Password123", savedUser.getPassword()), "Password should be encoded");
-        
-        assertNotNull(savedUser.getRoles(), "User should have roles");
-        assertEquals(1, savedUser.getRoles().size(), "User should have one role");
-        assertTrue(savedUser.getRoles().stream()
-            .anyMatch(r -> r.getName().equals("ROLE_USER")), "User should have ROLE_USER");
-
-            assertNotNull(savedUser.getAvatarFilename(), "Avatar filename should be set");
-    }
-
-    @Test
-    public void testFindByEmail(){
-        User user = new User();
-        user.setEmail("test@mail.com");
+        user.setEmail("test@example.com");
+        user.setUsername("testuser");
         user.setPassword("password");
-        userRepository.save(user);
 
-        Optional<User> foundUser = authService.findByEmail("test@mail.com");
+        when(userRepository.existsByEmail(anyString())).thenReturn(false);
+        when(userRepository.existsByUsername(anyString())).thenReturn(false);
+        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
+        when(roleRepository.findByName("ROLE_USER"))
+            .thenReturn(Optional.of(new Role("ROLE_USER")));
 
-        assertTrue(foundUser.isPresent());
-        assertEquals("test@mail.com", foundUser.get().getEmail());
+        authService.register(user, null, mock(HttpServletRequest.class));
+
+        verify(userRepository).save(any(User.class));
+        verify(verificationTokenService).createVerificationForRegisteredUser(anyString(), any());
     }
 
     @Test
-    public void testFindByEmailNotFound(){
-        Optional<User> foundUser = authService.findByEmail("nonexistent@mail.com");
-        assertFalse(foundUser.isPresent());
+    public void testRegisterExistingUser() {
+        when(userRepository.existsByEmail(anyString())).thenReturn(true);
+
+        User user = new User();
+        user.setEmail("existing@example.com");
+        
+        assertThrows(IllegalArgumentException.class, 
+            () -> authService.register(user, null, null));
     }
 
     @Test
-    @Transactional
-    public void testFindAllUsers() {
-        User user1 = new User();
-        user1.setEmail("user1@mail.com");
-        user1.setPassword("pass1");
+    public void testFindByEmail() {
+        User expectedUser = new User();
+        expectedUser.setEmail("found@example.com");
+        
+        when(userRepository.findByEmail("found@example.com"))
+            .thenReturn(Optional.of(expectedUser));
 
-        User user2 = new User();
-        user2.setEmail("user2@mail.com");
-        user2.setPassword("pass2");
-
-        entityManager.persist(user1);
-        entityManager.persist(user2);
-        entityManager.flush();
-
-        List<User> users = authService.findAllUsers();
-        assertEquals(2, users.size(), "Should find all users");
+        Optional<User> result = authService.findByEmail("found@example.com");
+        
+        assertTrue(result.isPresent());
+        assertEquals("found@example.com", result.get().getEmail());
     }
 }

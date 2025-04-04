@@ -117,7 +117,7 @@ public class PasswordResetService {
     }
     
     public void invalidateExistingTokens(String email) {
-    passwordResetTokenRepository.findByEmail(email)
+    passwordResetTokenRepository.findByUserEmail(email)
         .ifPresent(token -> {
             token.setExpirationTime(LocalDateTime.now()); 
             passwordResetTokenRepository.save(token);
