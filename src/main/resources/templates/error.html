@@ -1,19 +1,106 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Error</title>
+    <script src="https://kit.fontawesome.com/68959b25ab.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" th:href="@{/css/auth-style.css}" />
+    <style>
+        .error-container {
+            max-width: 500px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .error-icon {
+            font-size: 4rem;
+            color: #722F37;
+            margin-bottom: 1.5rem;
+        }
+        
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-radius: 55px;
+            padding: 1.25rem;
+            margin-bottom: 2rem;
+        }
+        
+        .back-action {
+            margin-top: 1.5rem;
+        }
+        
+        @media (max-width: 570px) {
+            .error-container {
+                padding: 1.5rem;
+            }
+            .error-icon {
+                font-size: 3rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <div class="alert alert-danger">
-            <h2>Error</h2>
-            <p th:text="${error} ?: 'An unexpected error occurred'"></p>
-            <div th:if="${error == 'Link already expired, resend link'}">
-                <a th:href="@{/forgot-password}" class="btn btn-warning">Resend Reset Link</a>
+    <div class="container">
+        <div class="forms-container">
+            <div class="auth-forms">
+                <div class="auth-form">
+                    <div class="error-container">
+                        <div class="error-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        
+                        <h2 class="title">Error Occurred</h2>
+                        
+                        <div class="alert alert-danger">
+                            <p th:text="${error} ?: 'An unexpected error occurred'"></p>
+                        </div>
+                        
+                        <th:block th:if="${error == 'Link already expired, resend link'}">
+                            <form th:action="@{/forgot-password/resend}" method="post" class="resend-form">
+                                <input type="hidden" name="email" th:value="${param.email[0]}">
+                                <button type="submit" class="btn resend-btn">
+                                    <i class="fas fa-redo"></i> Resend Reset Link
+                                </button>
+                            </form>
+                        </th:block>
+                        
+                        <div class="back-action">
+                            <a th:href="@{/}" class="account-link">
+                                <i class="fas fa-arrow-left"></i> Go Back
+                            </a>
+                        </div>
+
+                        <div th:if="${resendSuccess}" class="alert alert-success">
+                            New reset link sent successfully!
+                        </div>
+                        <div th:if="${resendError}" class="alert alert-danger" th:text="${resendError}">
+                        </div>
+                    </div>
+                </div>
             </div>
-            <a th:href="@{/}" class="btn btn-secondary mt-3">Return to Home</a>
         </div>
+
+        <div class="panels-container">
+            <div class="panel left-panel error-help">
+                <div class="content">
+                    <h3>Need help?</h3>
+                    <p>Contact support if you need assistance resolving this issue</p>
+                </div>
+                <img th:src="@{/images/error-help.png}" class="image" alt="Help illustration">
+            </div>
+        </div>   
     </div>
+
+    <script>
+        document.querySelector('.btn.transparent').addEventListener('click', function(e) {
+            if (window.history.length > 1) {
+                e.preventDefault();
+                window.history.back();
+            }
+        });
+    </script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 package com.group20.dailyreadingtracker.auth;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -54,15 +55,12 @@ public class PasswordResetService {
     public String validatePasswordResetToken(String tokenValue) {
         Optional<PasswordResetToken> tokenOptional = passwordResetTokenRepository.findByToken(tokenValue);
         
-        // Check if token exists
         if (!tokenOptional.isPresent()) {
             return "Invalid password reset token";
         }
         
-        // Get the actual token from Optional
         PasswordResetToken token = tokenOptional.get();
         
-        // Check expiration
         if (token.isExpired()) {
             return "Link already expired, resend link";
         }
@@ -71,20 +69,17 @@ public class PasswordResetService {
     }
 
     public String processPasswordReset(String token, String newPassword, String confirmPassword, RedirectAttributes redirectAttributes){
-        // Password match validation
         if (!newPassword.equals(confirmPassword)) {
             redirectAttributes.addAttribute("error", "Passwords don't match");
             return "redirect:/reset-password?token=" + token;
         }
 
-        // Token validation
         String validationResult = validatePasswordResetToken(token);
         if (!"valid".equals(validationResult)) {
             redirectAttributes.addAttribute("error", validationResult);
             return "redirect:/reset-password?token=" + token;
         }
 
-        // Get and validate token
         Optional<PasswordResetToken> tokenOptional = passwordResetTokenRepository.findByToken(token);
         if (!tokenOptional.isPresent() || tokenOptional.get().isExpired()) {
             redirectAttributes.addAttribute("error", "Invalid or expired token");
@@ -119,6 +114,14 @@ public class PasswordResetService {
         }
         
         return ResponseEntity.ok("If the email exists, a reset link has been sent");
+    }
+    
+    public void invalidateExistingTokens(String email) {
+    passwordResetTokenRepository.findByEmail(email)
+        .ifPresent(token -> {
+            token.setExpirationTime(LocalDateTime.now()); 
+            passwordResetTokenRepository.save(token);
+        });
     }
 
     @Transactional
