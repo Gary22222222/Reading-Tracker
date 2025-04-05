@@ -3,17 +3,14 @@ package com.group20.dailyreadingtracker.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.AccessDeniedHandler;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-
-import com.group20.dailyreadingtracker.user.User;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
 @Configuration
 @EnableWebSecurity
@@ -36,19 +33,23 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/register",
                     "/register/**",
-                    "/login",
-                    "/login/**",
+                    "/auth",
+                    "/auth/**",
                     "/uploads/**",
                     "/verify-email",
                     "/verify-email/**",
                     "/verify-email**",
                     "/resend-verification",
+                    "/resend-verification/**",
                     "/verify-pending",
+                    "/verify-pending/**",
                     "/css/**",
                     "/js/**",
                     "/images/**",
                     "/forgot-password",
-                    "/reset-password**",
+                    "/forgot-password/**",
+                    "/reset-password/**",
+                    "/reset-password",
                     "/logout" 
                 ).permitAll()
                 
@@ -56,8 +57,9 @@ public class SecurityConfig {
             )
             .formLogin(form -> form
                 .loginPage("/auth")
-                .successHandler(authenticationSuccessHandler())
-                .failureUrl("/auth?error=true")
+                .failureHandler(authenticationFailureHandler())
+                .loginProcessingUrl("/login") 
+                .defaultSuccessUrl("/home", true)
                 .permitAll()
             )
             .logout(logout -> logout
@@ -68,43 +70,23 @@ public class SecurityConfig {
             )
             
             .exceptionHandling(exceptions -> exceptions
-            .accessDeniedHandler((request, response, accessDeniedException) -> {
-                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-                if (auth != null && auth.getPrincipal() instanceof User) {
-                    User user = (User) auth.getPrincipal();
-                    if (!user.getIsEnabled()) {
-                        response.sendRedirect("/verify-pending?email=" + user.getEmail());
-                        return;
-                    }
-                }
-                response.sendRedirect("/access-denied");
-            })
+            .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/auth"))
         );
 
         return http.build();
     }
 
     @Bean
-    public AuthenticationSuccessHandler authenticationSuccessHandler() {
-        return (request, response, authentication) -> {
-            User user = (User) authentication.getPrincipal();
-            if (!user.getIsEnabled()) {
-                response.sendRedirect("/verify-pending?email=" + user.getEmail());
-            } else {
-                response.sendRedirect("/home");
+    public AuthenticationFailureHandler authenticationFailureHandler() {
+        return (request, response, exception) -> {
+            String email = request.getParameter("username");
+            String redirectUrl = "/auth?error=true";
+            
+            if (exception instanceof DisabledException) {
+                redirectUrl = "/verify-pending?email=" + email;
             }
-        };
-    }
-
-    @Bean
-    public AccessDeniedHandler accessDeniedHandler() {
-        return (request, response, accessDeniedException) -> {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && !((User) auth.getPrincipal()).getIsEnabled()) {
-                response.sendRedirect("/verify-pending?email=" + ((User) auth.getPrincipal()).getEmail());
-            } else {
-                response.sendRedirect("/access-denied");
-            }
+            
+            response.sendRedirect(redirectUrl);
         };
     }
 }

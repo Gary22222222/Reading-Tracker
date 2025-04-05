@@ -1,30 +1,52 @@
 package com.group20.dailyreadingtracker.auth;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
 public class VerificationController {
     private final VerificationTokenService verificationTokenService;
+    private static final Logger logger = LoggerFactory.getLogger(VerificationController.class);
 
     public VerificationController(VerificationTokenService verificationTokenService){
         this.verificationTokenService = verificationTokenService;
     }
 
     @GetMapping("/verify-email")
-    public String verifyEmail(@RequestParam String token, Model model) {
+    public String verifyEmail(@RequestParam String token, Model model, 
+                            RedirectAttributes redirectAttributes) {
         try {
-            verificationTokenService.verifyEmail(token);
-            return "redirect:/login?verified=true";
+            ResponseEntity<String> response = verificationTokenService.verifyEmail(token);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                return "redirect:/auth?verified=true";
+            }
         } catch (Exception e) {
-            model.addAttribute("error", e.getMessage());
-            return "verification-error";
+            logger.error("Email verification failed", e);
+            redirectAttributes.addAttribute("error", e.getMessage());
+
+            if (e.getMessage().contains("expired")) {
+                String email = verificationTokenService.getEmailFromToken(token);
+                redirectAttributes.addAttribute("email", email);
+            }
         }
+        return "redirect:/verification-error";
+    }
+
+    @GetMapping("/verification-error")
+    public String showVerificationError(@RequestParam(required = false) String error, @RequestParam(required = false) String email, Model model) {
+        model.addAttribute("error", error);
+        model.addAttribute("email", email);
+        return "verification-error";
     }
 
     @GetMapping("/verify-pending")
@@ -37,8 +59,17 @@ public class VerificationController {
     }
 
     @PostMapping("/resend-verification")
-    public String resendVerification(@RequestParam String email, HttpServletRequest request) {
-        verificationTokenService.createVerificationForRegisteredUser(email, request);
-        return "redirect:/verify-pending?email=" + email + "&resent=true";
+    public String resendVerification(@RequestParam String email, 
+                                HttpServletRequest request,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            verificationTokenService.createVerificationForRegisteredUser(email, request);
+            redirectAttributes.addAttribute("email", email);
+            return "redirect:/verify-pending?resent=true";
+        } catch (Exception e) {
+            redirectAttributes.addAttribute("error", "Failed to resend verification: " + e.getMessage());
+            redirectAttributes.addAttribute("email", email);
+            return "redirect:/verification-error";
+        }
     }
 }

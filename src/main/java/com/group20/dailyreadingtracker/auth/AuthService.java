@@ -39,40 +39,54 @@ public class AuthService implements IAuthService{
     @Transactional
     @Override
     public void register(User user, MultipartFile avatar, HttpServletRequest request){
-        if (userRepository.existsByEmail(user.getEmail()) || 
-            userRepository.existsByUsername(user.getUsername())) {
-            throw new IllegalArgumentException("User already exists");
-        }
+        try {
+            if (userRepository.existsByEmail(user.getEmail()) || 
+            userRepository.existsByUsername(user.getUsername())) 
+                throw new IllegalArgumentException("User already exists");
 
-        user.setPassword(encoder.encode(user.getPassword()));
+            if (!user.isPasswordsMatch())
+                throw new RegistrationException("Passwords must match");
+   
+            user.setConfirmPassword(null);
 
-        if (avatar != null && !avatar.isEmpty()) {
-            try {
-                String avatarFilename = fileStorageService.storeAvatar(avatar, user.getUsername());
-                user.setAvatarFilename(avatarFilename);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to store avatar", e);
+            user.setPassword(encoder.encode(user.getPassword()));
+
+            if (avatar != null && !avatar.isEmpty()) {
+                try {
+                    String avatarFilename = fileStorageService.storeAvatar(avatar, user.getUsername());
+                    user.setAvatarFilename(avatarFilename);
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to store avatar", e);
+                }
             }
-        }
-        
-        // Default role assignment
-        if (user.getRoles() == null) {
-            user.setRoles(new HashSet<>());
-        }
+            
+            // Default role assignment
+            if (user.getRoles() == null) {
+                user.setRoles(new HashSet<>());
+            }
 
-        Role userRole = roleRepository.findByName("ROLE_USER")
-        .orElseGet(() -> {
-            Role newRole = new Role("ROLE_USER");
-            return roleRepository.save(newRole);
-        });
+            Role userRole = roleRepository.findByName("ROLE_USER")
+            .orElseGet(() -> {
+                Role newRole = new Role("ROLE_USER");
+                return roleRepository.save(newRole);
+            });
 
-        user.getRoles().clear();
-        user.getRoles().add(userRole);
+            user.getRoles().clear();
+            user.getRoles().add(userRole);
 
-        userRepository.save(user);
+            userRepository.save(user);
 
-        if (request != null)
-            verificationTokenService.createVerificationForRegisteredUser(user.getEmail(), request);
+            if (request != null){
+                try{
+                    verificationTokenService.createVerificationForRegisteredUser(user.getEmail(), request);
+                } catch (Exception e){
+                    userRepository.delete(user);
+                    throw new EmailVerificationException("Failed to send verification email", e);
+                }
+            }
+        } catch (RuntimeException e) {
+            throw new RegistrationException("Registration failed: " + e.getMessage(), e);
+        }            
     }
     
     @Override
@@ -83,6 +97,22 @@ public class AuthService implements IAuthService{
     @Override
     public List<User> findAllUsers(){
         return userRepository.findAll();
+    }
+
+    public class RegistrationException extends RuntimeException{
+        public RegistrationException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public RegistrationException(String message){
+            super(message);
+        }
+    }
+
+    public class EmailVerificationException extends RuntimeException {
+        public EmailVerificationException(String message, Throwable cause) {
+            super(message, cause);
+        }
     }
 
 }
