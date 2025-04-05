@@ -52,6 +52,7 @@ public class SecurityConfig {
                     "/verify-pending",
                     "/css/**",
                     "/js/**",
+                    "/images/**",
                     "/forgot-password",
                     "/reset-password**",
                     "/logout" 
@@ -60,13 +61,13 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
-                .loginPage("/login")
+                .loginPage("/auth")
                 .successHandler(authenticationSuccessHandler())
-                .failureUrl("/login?error=true")
+                .failureUrl("/auth?error=true")
                 .permitAll()
             )
             .logout(logout -> logout
-                .logoutSuccessUrl("/login?logout=true")
+                .logoutSuccessUrl("/auth?logout=true")
                 .invalidateHttpSession(true)
                 .clearAuthentication(true)
                 .permitAll()

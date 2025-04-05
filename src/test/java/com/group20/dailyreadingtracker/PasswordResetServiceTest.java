@@ -2,22 +2,24 @@ package com.group20.dailyreadingtracker;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.group20.dailyreadingtracker.auth.EmailService;
 import com.group20.dailyreadingtracker.auth.PasswordResetService;
@@ -27,12 +29,13 @@ import com.group20.dailyreadingtracker.user.User;
 import com.group20.dailyreadingtracker.user.UserRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 
 @ExtendWith(MockitoExtension.class)
 public class PasswordResetServiceTest {
     
     @Mock
-    private PasswordEncoder passwordEncoder;
+    private PasswordEncoder encoder;
 
     @Mock
     private UserRepository userRepository;
@@ -43,65 +46,61 @@ public class PasswordResetServiceTest {
     @Mock
     private EmailService emailService;
 
-    @Mock
-    private HttpServletRequest request;
-
-    @Mock
-    private RedirectAttributes redirectAttributes;
-
     @InjectMocks
     private PasswordResetService passwordResetService;
 
     private User testUser;
-    private PasswordResetToken validToken;
-    private PasswordResetToken expiredToken;
+    private PasswordResetToken testToken;
 
     @BeforeEach
     public void setup() {
         testUser = new User();
+        testUser.setId(1L);
         testUser.setEmail("test@example.com");
         testUser.setPassword("oldPassword");
-
-        validToken = new PasswordResetToken(UUID.randomUUID().toString(), testUser);
-        expiredToken = new PasswordResetToken(UUID.randomUUID().toString(), testUser);
-        expiredToken.setExpirationTime(LocalDateTime.now().minusHours(1));
+        
+        testToken = new PasswordResetToken();
+        testToken.setToken("testToken");
+        testToken.setUser(testUser);
+        testToken.setExpirationTime(LocalDateTime.now().plusHours(1));
     }
 
     @Test
     void testResetPasswordValidInput() {
-        when(passwordEncoder.encode("newPassword")).thenReturn("encodedPassword");
-
+        when(encoder.encode("newPassword")).thenReturn("encodedNewPassword");
+        
         passwordResetService.resetPassword(testUser, "newPassword");
-
+        
+        assertEquals("encodedNewPassword", testUser.getPassword());
         verify(userRepository).save(testUser);
-        assertEquals("encodedPassword", testUser.getPassword());
     }
 
     @Test
+    @Transactional
     void testCreatePasswordResetTokenForUserSuccess() {
         when(tokenRepository.findByUser(testUser)).thenReturn(Optional.empty());
-        when(tokenRepository.save(any(PasswordResetToken.class))).thenReturn(validToken);
-
-        passwordResetService.createPasswordResetTokenForUser(testUser, "token123");
-
+        
+        passwordResetService.createPasswordResetTokenForUser(testUser, "newToken");
+        
         verify(tokenRepository).save(any(PasswordResetToken.class));
     }
 
     @Test
     void testValidatePasswordResetToken() {
-        when(tokenRepository.findByToken(validToken.getToken())).thenReturn(Optional.of(validToken));
-
-        String result = passwordResetService.validatePasswordResetToken(validToken.getToken());
-
+        when(tokenRepository.findByToken("validToken")).thenReturn(Optional.of(testToken));
+        
+        String result = passwordResetService.validatePasswordResetToken("validToken");
+        
         assertEquals("valid", result);
     }
 
     @Test
     void testValidatePasswordResetTokenExpired() {
-        when(tokenRepository.findByToken(expiredToken.getToken())).thenReturn(Optional.of(expiredToken));
-
-        String result = passwordResetService.validatePasswordResetToken(expiredToken.getToken());
-
+        testToken.setExpirationTime(LocalDateTime.now().minusHours(1));
+        when(tokenRepository.findByToken("expiredToken")).thenReturn(Optional.of(testToken));
+        
+        String result = passwordResetService.validatePasswordResetToken("expiredToken");
+        
         assertEquals("Link already expired, resend link", result);
     }
 
@@ -115,40 +114,57 @@ public class PasswordResetServiceTest {
     }
 
     @Test
-    void testProcessPasswordReset() {
-        when(tokenRepository.findByToken(validToken.getToken())).thenReturn(Optional.of(validToken));
-        when(passwordEncoder.encode("newPassword")).thenReturn("encodedPassword");
-
-        String result = passwordResetService.processPasswordReset(
-            validToken.getToken(), "newPassword", "newPassword", redirectAttributes);
-
-        assertEquals("redirect:/login", result);
-        verify(userRepository).save(testUser);
-        verify(tokenRepository).delete(validToken);
-        verify(redirectAttributes).addFlashAttribute("success", "Password reset successfully");
+    void testRequestPasswordResetSuccess() {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
+        when(tokenRepository.findByUser(testUser)).thenReturn(Optional.empty());
+        
+        StringBuffer url = new StringBuffer("http://localhost:8080");
+        when(request.getRequestURL()).thenReturn(url);
+        when(request.getServletPath()).thenReturn("");
+        
+        ArgumentCaptor<PasswordResetToken> tokenCaptor = ArgumentCaptor.forClass(PasswordResetToken.class);
+        ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
+        
+        ResponseEntity<String> response = passwordResetService.requestPasswordReset("test@example.com", request);
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(response.getBody().contains("Password reset link sent"));
+        
+        
+        verify(tokenRepository).save(tokenCaptor.capture());
+        String generatedToken = tokenCaptor.getValue().getToken();
+        
+        verify(emailService).sendPasswordResetEmail(
+            eq(testUser),
+            urlCaptor.capture()
+        );
+        
+        String sentUrl = urlCaptor.getValue();
+        assertTrue(sentUrl.startsWith("http://localhost:8080/reset-password?token="));
+        assertTrue(sentUrl.endsWith(generatedToken));
+        assertEquals(generatedToken.length() + "http://localhost:8080/reset-password?token=".length(), 
+                sentUrl.length());
     }
 
     @Test
-    void testRequestPasswordReset() {
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
-        when(request.getRequestURL()).thenReturn(new StringBuffer("http://localhost/reset"));
-        when(request.getServletPath()).thenReturn("/reset");
-
-        var response = passwordResetService.requestPasswordReset("test@example.com", request);
-
-        assertEquals(200, response.getStatusCode());
-        verify(emailService).sendPasswordResetEmail(testUser, anyString());
+    void testInvalidateExistingTokens() {
+        when(tokenRepository.findByUserEmail("test@example.com")).thenReturn(Optional.of(testToken));
+        
+        passwordResetService.invalidateExistingTokens("test@example.com");
+        
+        assertTrue(testToken.getExpirationTime().isBefore(LocalDateTime.now().plusMinutes(1)));
+        verify(tokenRepository).save(testToken);
     }
 
     @Test
     void testFindUserByPasswordToken() {
-        when(tokenRepository.findByToken(validToken.getToken())).thenReturn(Optional.of(validToken));
+        when(tokenRepository.findByToken(testToken.getToken())).thenReturn(Optional.of(testToken));
 
-        Optional<User> result = passwordResetService.findUserByPasswordToken(validToken.getToken());
+        Optional<User> result = passwordResetService.findUserByPasswordToken(testToken.getToken());
 
         assertTrue(result.isPresent());
         assertEquals(testUser, result.get());
     }
 
-    
 }

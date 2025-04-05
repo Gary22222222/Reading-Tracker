@@ -28,34 +28,32 @@ public class AuthController {
         this.securityService = securityService;
     }
 
-    @GetMapping("/register")
-    public String getRegistrationForm(Model model) {
-        if(securityService.isAuthenticated())
+    @GetMapping("/auth")
+    public String getAuthPage(Model model,
+                            @RequestParam(required = false) String error,
+                            @RequestParam(required = false) String logout,
+                            @RequestParam(required = false) String mode) {
+        if (securityService.isAuthenticated())
             return "redirect:/home";
 
         model.addAttribute("user", new User());
         
-        return "registration";
+        if (error != null)
+            model.addAttribute("error", "Your email or password is invalid.");
+        
+        if (logout != null)
+            model.addAttribute("message", "You have been logged out successfully.");
+        
+        if ("register".equals(mode))
+            model.addAttribute("defaultToRegister", true);
+
+        return "authentication";
     }
 
     @PostMapping("/register")
     public String processRegistration(@ModelAttribute("user") User user, @RequestParam(required = false) MultipartFile avatar, HttpServletRequest request) {
         authService.register(user, avatar, request);
         return "redirect:/verify-pending?email=" + user.getEmail();
-    }
-
-    @GetMapping("/login")
-    public String getLoginForm(Model model, String error, String logout) {
-        if (securityService.isAuthenticated())
-            return "redirect:/home";
-
-        if (error != null)
-            model.addAttribute("error", "Your email or password is invalid.");
-        
-        if (logout != null)
-            model.addAttribute("message", "You have been logged out successfully.");
-
-        return "login";
     }
 
     @GetMapping("/logout")

@@ -85,4 +85,13 @@ public class PasswordResetController {
                                                      HttpServletRequest servletRequest) {
         return passwordResetService.requestPasswordReset(email, servletRequest);
     }
+
+    @RateLimiter(name = "passwordResetLimiter")
+    @PostMapping("/forgot-password/resend")
+    public ResponseEntity<String> resendPasswordResetLink(
+            @RequestParam String email,
+            HttpServletRequest request) {
+        passwordResetService.invalidateExistingTokens(email);
+        return passwordResetService.requestPasswordReset(email, request);
+    }
 }
