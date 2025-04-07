@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,8 +18,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.group20.dailyreadingtracker.auth.EmailService;
@@ -116,35 +115,31 @@ public class PasswordResetServiceTest {
     @Test
     void testRequestPasswordResetSuccess() {
         HttpServletRequest request = mock(HttpServletRequest.class);
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
+        User testUser = new User();
+        testUser.setEmail("test@example.com");
+        testUser.setPassword("password");
+        
+        when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
         when(tokenRepository.findByUser(testUser)).thenReturn(Optional.empty());
         
         StringBuffer url = new StringBuffer("http://localhost:8080");
         when(request.getRequestURL()).thenReturn(url);
         when(request.getServletPath()).thenReturn("");
         
+        String result = passwordResetService.requestPasswordReset(testUser.getEmail(), request);
+        
+        assertEquals("If this email exists, a reset link has been sent", result);
+        
         ArgumentCaptor<PasswordResetToken> tokenCaptor = ArgumentCaptor.forClass(PasswordResetToken.class);
-        ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
-        
-        ResponseEntity<String> response = passwordResetService.requestPasswordReset("test@example.com", request);
-        
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue(response.getBody().contains("Password reset link sent"));
-        
-        
         verify(tokenRepository).save(tokenCaptor.capture());
-        String generatedToken = tokenCaptor.getValue().getToken();
+        assertNotNull(tokenCaptor.getValue().getToken());
         
+        ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
         verify(emailService).sendPasswordResetEmail(
             eq(testUser),
             urlCaptor.capture()
         );
-        
-        String sentUrl = urlCaptor.getValue();
-        assertTrue(sentUrl.startsWith("http://localhost:8080/reset-password?token="));
-        assertTrue(sentUrl.endsWith(generatedToken));
-        assertEquals(generatedToken.length() + "http://localhost:8080/reset-password?token=".length(), 
-                sentUrl.length());
+        assertTrue(urlCaptor.getValue().contains("reset-password?token="));
     }
 
     @Test

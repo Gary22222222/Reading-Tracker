@@ -6,12 +6,9 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.group20.dailyreadingtracker.user.User;
@@ -91,29 +88,25 @@ public class PasswordResetService {
         passwordResetTokenRepository.delete(resetToken);
 
         redirectAttributes.addFlashAttribute("success", "Password reset successfully");
-        return "redirect:/login";
+        return "redirect:/auth";
     }
 
-    public ResponseEntity<String> requestPasswordReset(@RequestParam String email, HttpServletRequest request) {
+    public String requestPasswordReset(String email, HttpServletRequest request) {
         Optional<User> user = userRepository.findByEmail(email);
-
+        
         if (user.isPresent()) {
-            String token = UUID.randomUUID().toString();
-            createPasswordResetTokenForUser(user.get(), token);
-            
-            String resetUrl = generatePasswordResetUrl(request, token);
-
             try {
+                String token = UUID.randomUUID().toString();
+                createPasswordResetTokenForUser(user.get(), token);
+                String resetUrl = generatePasswordResetUrl(request, token);
                 emailService.sendPasswordResetEmail(user.get(), resetUrl);
-                return ResponseEntity.ok("Password reset link sent to your email");
+                return "If this email exists, a reset link has been sent";
             } catch (Exception e) {
                 logger.error("Failed to send password reset email", e);
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to send reset email. Please try again later.");
+                return "Error: Failed to send reset email. Please try again later.";
             }
         }
-        
-        return ResponseEntity.ok("If the email exists, a reset link has been sent");
+        return "If this email exists, a reset link has been sent";
     }
     
     public void invalidateExistingTokens(String email) {

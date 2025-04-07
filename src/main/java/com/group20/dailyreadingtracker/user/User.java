@@ -1,13 +1,23 @@
 package com.group20.dailyreadingtracker.user;
 
-import java.util.List;
 import java.util.Set;
 
 import com.group20.dailyreadingtracker.auth.VerificationToken;
-import com.group20.dailyreadingtracker.readinglog.ReadingLog;
 import com.group20.dailyreadingtracker.role.Role;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -21,6 +31,7 @@ public class User {
     private long id;
 
     @Column(name="username", nullable=false, length=40, unique=true)
+    @Size(min=4, max=20, message="Username must be between 4-20 characters")
     private String username;
 
     @Column(nullable=false, unique=true)
@@ -33,9 +44,12 @@ public class User {
     @Size(min = 8, max = 64, message = "Password must be 8-64 characters")
     @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).*$", message = "Password must contain at least 1 digit, 1 lowercase, and 1 uppercase letter")
     private String password;
+
+    @Transient
+    private String confirmPassword;
     
     @Column(nullable = false)
-    private boolean isEnabled = false; // Email verification
+    private boolean isEnabled = false;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private VerificationToken verificationToken;
@@ -47,10 +61,6 @@ public class User {
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ReadingLog> readingLogs;
-
 
     @Column(name ="avatar_file_name")
     private String avatarFileName;
@@ -93,12 +103,21 @@ public class User {
     public void setEmail(String email) {
         this.email = email;
     }
+
     public String getPassword() {
         return password;
     }
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getConfirmPassword(){
+        return confirmPassword;
+    }
+
+    public void setConfirmPassword(String confirmPassword){
+        this.confirmPassword = confirmPassword;
     }
 
     public boolean getIsEnabled() {
@@ -131,5 +150,9 @@ public class User {
 
     public void setAvatarFilename(String avatarFileName){
         this.avatarFileName = avatarFileName;
+    }
+
+    public boolean isPasswordsMatch() {
+        return password != null && password.equals(confirmPassword);
     }
 }

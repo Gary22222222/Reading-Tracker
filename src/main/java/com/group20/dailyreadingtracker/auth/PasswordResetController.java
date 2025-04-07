@@ -2,7 +2,6 @@ package com.group20.dailyreadingtracker.auth;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -30,11 +29,37 @@ public class PasswordResetController {
     }
 
     @GetMapping("/forgot-password")
-    public String showForgotPasswordForm(){
+    public String showForgotPasswordForm(Model model){
         if (securityService.isAuthenticated()) {
             return "redirect:/home";
         }
+
         return "forgot-password";
+    }
+
+    @RateLimiter(name = "passwordResetLimiter")
+    @PostMapping("/forgot-password")
+    public String requestPasswordReset(
+            @RequestParam String email,
+            HttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+        
+        String result = passwordResetService.requestPasswordReset(email, request);
+        redirectAttributes.addFlashAttribute("message", result);
+        return "redirect:/forgot-password";
+    }
+
+    @RateLimiter(name = "passwordResetLimiter")
+    @PostMapping("/forgot-password/resend")
+    public String resendPasswordResetLink(
+            @RequestParam String email,
+            HttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+        
+        passwordResetService.invalidateExistingTokens(email);
+        String result = passwordResetService.requestPasswordReset(email, request);
+        redirectAttributes.addAttribute("message", result);
+        return "redirect:/forgot-password";
     }
 
     @GetMapping("/reset-password")
@@ -65,7 +90,7 @@ public class PasswordResetController {
     public String processPasswordReset(@Valid PasswordResetRequest request, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             bindingResult.getAllErrors().forEach(error -> {
-                redirectAttributes.addFlashAttribute("error", error.getDefaultMessage());
+                redirectAttributes.addAttribute("error", error.getDefaultMessage());
             });
 
             return "redirect:/reset-password?token=" + request.getToken();
@@ -77,21 +102,5 @@ public class PasswordResetController {
             request.getConfirmPassword(), 
             redirectAttributes
         );
-    }
-    
-    @RateLimiter(name = "passwordResetLimiter")
-    @PostMapping("/forgot-password")
-    public ResponseEntity<String> requestPasswordReset(@RequestParam String email, 
-                                                     HttpServletRequest servletRequest) {
-        return passwordResetService.requestPasswordReset(email, servletRequest);
-    }
-
-    @RateLimiter(name = "passwordResetLimiter")
-    @PostMapping("/forgot-password/resend")
-    public ResponseEntity<String> resendPasswordResetLink(
-            @RequestParam String email,
-            HttpServletRequest request) {
-        passwordResetService.invalidateExistingTokens(email);
-        return passwordResetService.requestPasswordReset(email, request);
     }
 }

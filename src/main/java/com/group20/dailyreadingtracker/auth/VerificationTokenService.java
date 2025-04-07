@@ -35,7 +35,7 @@ public class VerificationTokenService {
         User user = userRepository.findByEmail(email)
             .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
 
-        verificationTokenRepository.deleteByUser(user);
+        verificationTokenRepository.deleteAllByUser(user);
 
         VerificationToken token = new VerificationToken();
         token.setToken(UUID.randomUUID().toString());
@@ -61,8 +61,7 @@ public class VerificationTokenService {
             token.setConfirmedDateTime(LocalDateTime.now());
             
             userRepository.save(token.getUser());
-            verificationTokenRepository.save(token);
-
+            
             return ResponseEntity.ok("Email verified successfully. You may now log in.");
         } catch (Exception e) {
             logger.error("Email verification failed", e);
@@ -85,4 +84,9 @@ public class VerificationTokenService {
         return baseUrl + "/verify-email?token=" + token;
     }
     
+    public String getEmailFromToken(String tokenValue) {
+        return verificationTokenRepository.findByToken(tokenValue)
+            .map(token -> token.getUser().getEmail())
+            .orElse(null);
+    }
 }
