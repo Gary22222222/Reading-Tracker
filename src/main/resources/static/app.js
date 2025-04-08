@@ -124,33 +124,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 创建日志元素
+    // app.js
     function createLogElement(log) {
         const logElement = document.createElement('div');
         logElement.className = 'log-entry';
 
-        const date = new Date(log.date).toLocaleDateString();
-
-        // 更新HTML结构
         logElement.innerHTML = `
-        <div class="log-header">
-            <h3 class="log-title">${log.title}</h3>
-            <span class="log-date">${date}</span>
-        </div>
-        <p class="log-author">By ${log.author}</p>
-        <div class="log-content">
-            <p class="log-notes">${log.notes || 'No notes'}</p>
-            <div class="log-meta">
-                <span>阅读时长：${log.timeSpent} 分钟</span>
-            </div>
-        </div>
+    <div class="log-header">
+        <h3 class="log-title">${log.title}</h3>
         <div class="actions">
             <button class="view-btn" data-id="${log.id}">详情</button>
             <button class="edit-btn" data-id="${log.id}">编辑</button>
             <button class="delete-btn" data-id="${log.id}">删除</button>
         </div>
+    </div>
     `;
 
-        // 添加事件监听
+        // 添加事件监听（保持原有功能）
         logElement.querySelector('.view-btn').addEventListener('click', () => viewDetails(log.id));
         logElement.querySelector('.edit-btn').addEventListener('click', () => editLog(log.id));
         logElement.querySelector('.delete-btn').addEventListener('click', () => deleteLog(log.id));
@@ -159,38 +149,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 新增查看详情功能
+    // 在 app.js 中找到查看详情的函数
     function viewDetails(logId) {
         makeAuthenticatedRequest(`/api/reading-logs/${logId}`)
             .then(handleResponse)
             .then(log => {
-                showDetailModal(log);
+                // 填充数据到详情弹窗
+                document.getElementById("detailNotes").textContent = log.notes;
+                // 显示弹窗
+                document.getElementById("detailModal").style.display = "flex";
             })
             .catch(error => {
                 alert('获取详情失败: ' + error.message);
             });
     }
 
+// 关闭弹窗逻辑（确保关闭按钮绑定事件）
+    document.querySelector("#detailModal .modal-close").addEventListener("click", () => {
+        document.getElementById("detailModal").style.display = "none";
+    });
+
 // 显示详情弹窗
+    // app.js
     function showDetailModal(log) {
         const modalHtml = `
-        <div class="modal">
-            <div class="modal-content">
-                <h3>${log.title}</h3>
-                <div class="modal-body">
-                    <p><strong>作者：</strong>${log.author}</p>
-                    <p><strong>日期：</strong>${new Date(log.date).toLocaleDateString()}</p>
-                    <p><strong>阅读时长：</strong>${log.timeSpent} 分钟</p>
-                    <p><strong>笔记：</strong>${log.notes || '无'}</p>
-                </div>
-                <button class="modal-close">关闭</button>
+    <div class="modal">
+        <div class="modal-content">
+            <h3>${log.title}</h3>
+            <div class="modal-body">
+                <p><strong>作者：</strong>${log.author}</p>
+                <p><strong>日期：</strong>${new Date(log.date).toLocaleDateString()}</p>
+                <p><strong>阅读时长：</strong>${log.timeSpent} 分钟</p>
+                <p><strong>笔记：</strong>${log.notes || '无'}</p>
             </div>
+            <button class="modal-close">关闭</button>
         </div>
+    </div>
     `;
 
         const modalContainer = document.createElement('div');
         modalContainer.innerHTML = modalHtml;
         document.body.appendChild(modalContainer);
 
+        // 关闭按钮点击事件
         modalContainer.querySelector('.modal-close').addEventListener('click', () => {
             document.body.removeChild(modalContainer);
         });
@@ -342,7 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentLogId = null;
         formTitle.textContent = 'Add New Reading Log';
         submitBtn.textContent = 'Add Log';
-        cancelBtn.style.display = 'none';
+
     }
 
     // 处理API响应
@@ -354,6 +355,66 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return response.json();
     }
+
+    // 初始化弹窗元素
+    const formModal = document.getElementById("formModal");
+
+// 点击"Add Log"按钮显示弹窗
+    document.getElementById("addLogBtn").addEventListener("click", () => {
+        resetForm();
+        formModal.style.display = "flex";
+    });
+
+// 表单提交处理（新增关闭弹窗逻辑）
+    function handleFormSubmit(e) {
+        e.preventDefault();
+        const logData = {
+            title: document.getElementById("title").value,
+            author: document.getElementById("author").value,
+            date: document.getElementById("date").value,
+            timeSpent: parseInt(document.getElementById("timeSpent").value),
+            notes: document.getElementById("notes").value
+        };
+
+        if (isEditing) {
+            updateLog(currentLogId, logData);
+        } else {
+            createLog(logData);
+        }
+
+        formModal.style.display = "none"; // 提交后关闭弹窗
+    }
+
+// 修改编辑函数以填充数据到弹窗
+    function editLog(logId) {
+        const log = logs.find(l => l.id === logId);
+        if (!log) return;
+
+        isEditing = true;
+        currentLogId = logId;
+
+        // 填充表单数据
+        document.getElementById("title").value = log.title;
+        document.getElementById("author").value = log.author;
+        document.getElementById("date").value = log.date;
+        document.getElementById("timeSpent").value = log.timeSpent;
+        document.getElementById("notes").value = log.notes || "";
+
+        // 更新弹窗标题和按钮文字
+        document.getElementById("formTitle").textContent = "Edit Reading Log";
+        document.getElementById("submitBtn").textContent = "Update Log";
+
+        // 显示弹窗
+        formModal.style.display = "flex";
+    }
+
+// 确保取消按钮点击关闭弹窗
+    document.getElementById("cancelBtn").addEventListener("click", () => {
+        document.getElementById("formModal").style.display = "none";
+        resetForm(); // 重置表单状态
+    });
+
+
 
     // 初始化应用
     init();

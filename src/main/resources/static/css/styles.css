@@ -11,6 +11,7 @@ body {
     color: #333;
     line-height: 1.6;
     padding: 20px;
+    margin: 8px; /* 现在会生效 */
 }
 
 .container {
@@ -285,18 +286,19 @@ h1 {
     background-color: #27ae60;
 }
 
-/* 弹窗样式 */
+/* ======= 通用弹窗样式 ======= */
 .modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.5);
-    display: flex;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex !important;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+
 }
 
 .modal-content {
@@ -304,20 +306,156 @@ h1 {
     padding: 25px;
     border-radius: 10px;
     width: 90%;
-    max-width: 500px;
+    max-width: 600px;
+    /* 新增基础高度控制 */
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* 外层容器不滚动 */
 }
-
+/* ======= 内容区域 ======= */
 .modal-body {
-    margin: 20px 0;
-    line-height: 1.6;
+    flex: 1; /* 填充剩余空间 */
+    min-height: 0; /* 关键！允许内容收缩 */
+    overflow-y: auto; /* 启用滚动条 */
+    padding: 15px;
 }
 
-.modal-close {
-    background-color: #3498db;
-    color: white;
+/* ======= 详情弹窗专属样式 ======= */
+#detailModal .modal-content {
+    max-height: 60vh !important;
+    height: auto !important;
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+
+    position: relative;
+    padding: 0 !important; /* 清除内边距干扰 */
+}
+
+#detailModal .modal-header {
+    padding: 15px 25px; /* 与内容对齐 */
+    border-bottom: 1px solid #eee;
+    flex-shrink: 0;
+    position: relative; /* 为关闭按钮提供定位基准 */
+}
+
+#detailModal .modal-body {
+    flex: 1 1 auto;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    padding: 15px 25px; /* 与header对齐 */
+    margin: 0;
+    box-sizing: border-box; /* 防止padding溢出 */
+}
+
+/* 强制关闭按钮定位 */
+#detailModal .modal-close {
+    top: 20px !important;
+    right: 20px !important;
+    transform: none !important;
+}
+
+/* 标题间距修正 */
+#detailTitle {
+    margin-right: 60px !important; /* 留出关闭按钮空间 */
+    padding-right: 15px;
+}
+
+/* 文本换行终极方案 */
+#detailModal .modal-body p {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    max-width: 100%;
+    margin: 0 !important;
+}
+
+
+/* home.html 的style部分添加 */
+.log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.log-header h3 {
+    margin: 0;
+    flex: 1;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* 调整按钮大小 */
+.actions button {
+    padding: 6px 12px;
+    font-size: 14px;
+}
+/* header按钮布局 */
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+
+
+.header-actions button {
     padding: 8px 16px;
+    font-size: 14px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    float: right;
+    transition: background 0.3s;
+    /* 新增以下内容 */
+    min-width: 120px;    /* 强制最小宽度 */
+    height: 40px;        /* 强制统一高度 */
+    line-height: 1;      /* 防止文字偏移 */
+    display: inline-flex; /* 图标对齐 */
+    align-items: center;  /* 垂直居中 */
+    justify-content: center; /* 水平居中 */
 }
+
+
+/* 确保所有按钮类型继承基础样式 */
+button {
+    font-family: inherit;     /* 统一字体 */
+    line-height: 1;           /* 统一行高 */
+}
+
+/* 弹窗表单样式（复用原有模态框样式） */
+.modal-content .form-group {
+    margin-bottom: 15px;
+}
+
+.modal-content .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.modal-content .form-group input,
+.modal-content .form-group textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* 添加日志按钮颜色 */
+#addLogBtn {
+    background: #2ecc71;
+    color: white;
+}
+
+/* 登出按钮颜色 */
+#logoutBtn {
+    background: #e74c3c;
+    color: white;
+}
+
+/* 悬停效果 */
+#addLogBtn:hover { background: #27ae60; }
+#logoutBtn:hover { background: #c0392b; }

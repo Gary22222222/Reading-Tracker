@@ -1,5 +1,6 @@
 package com.group20.dailyreadingtracker.readinglog;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.group20.dailyreadingtracker.user.User;
 import jakarta.persistence.Entity;
 import jakarta.persistence.*;
@@ -24,12 +25,14 @@ public class ReadingLog {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore // 添加此注解
     private User user;  // 关联用户
 
     private String title;   // 书籍或文章标题
     private String author;  // 作者
     private LocalDate date; // 阅读日期
     private int timeSpent;  // 阅读时间（单位：分钟）
+    @Column(columnDefinition = "TEXT") // 明确指定数据库列类型
     private String notes;   // 个人笔记
 
     @CreatedDate
