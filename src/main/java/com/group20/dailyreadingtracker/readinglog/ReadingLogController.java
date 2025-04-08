@@ -99,11 +99,12 @@ public class ReadingLogController {
         }
     }
 
+    // ReadingLogController.java
     private Long getUserIdFromPrincipal(Principal principal) {
-        String username = principal.getName(); // 获取用户名
-        User user = userRepository.findByUsername(username)
+        String email = principal.getName(); // 假设 principal 存的是 email
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new SecurityException("User not found"));
-        return user.getId(); // 返回用户 ID
+        return user.getId();
     }
 
 
