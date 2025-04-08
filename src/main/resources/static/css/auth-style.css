@@ -331,11 +331,11 @@ input {
 
 .avatar-preview {
   width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 50%;
-    display: none;
-    margin: 0 auto;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 50%;
+  display: none;
+  margin: 0 auto;
 }
 
 /* Email Verification */
@@ -457,7 +457,7 @@ input {
     min-height: 800px;
     height: 100vh;
   }
-  
+
   .auth-forms {
     width: 100%;
     top: 95%;
@@ -585,11 +585,11 @@ input {
   .image {
     display: none;
   }
-  
+
   .panel .content {
     padding: 0.5rem 1rem;
   }
-  
+
   .container {
     padding: 1.5rem;
   }
