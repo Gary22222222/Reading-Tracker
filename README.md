@@ -1,155 +1,142 @@
-阅读日志管理系统（Reading Activity Management）
-1. 概述
-阅读日志管理系统 旨在帮助用户记录和管理他们的阅读活动，包括书籍或文章的标题、作者、阅读时间、笔记等。同时，系统支持管理员删除包含不适当内容的日志。
+Reading Activity Management System
+1. Overview
 
-本系统基于 Spring Boot 进行开发，使用 Spring Data JPA 进行数据持久化，并提供 REST API 供前端调用。
+The Reading Activity Management System is designed to help users record and manage their reading activities, including book or article titles, authors, reading time, notes, and more. The system also supports administrators in removing logs that contain inappropriate content.
 
-2. 主要组件
-本模块主要包含以下核心类：
+The system is developed using Spring Boot, relies on Spring Data JPA for data persistence, and exposes RESTful APIs for interaction with the frontend.
 
-ReadingLog（实体类）：代表用户的阅读日志数据。
+2. Main Components
 
-ReadingLogDto（数据传输对象）：用于处理前端请求的数据结构。
+This module includes the following core components:
 
-ReadingLogRepository（数据访问层）：提供数据库查询功能。
+ReadingLog (Entity): Represents a user’s reading log record.
 
-ReadingLogService（业务逻辑层）：处理日志的增删改查逻辑。
+ReadingLogDto (Data Transfer Object): Handles incoming data from frontend requests.
 
-ReadingLogController（控制器）：提供 REST API 端点，供前端调用。
+ReadingLogRepository (Repository Layer): Provides database access and query capabilities.
 
-ViolationLog（违规日志记录）：记录管理员删除的违规日志。
+ReadingLogService (Service Layer): Implements the business logic for creating, retrieving, updating, and deleting logs.
 
-ViolationLogRepository（违规日志存储库）：存储违规日志。
+ReadingLogController (Controller): Exposes REST API endpoints to the frontend.
 
-3. 代码结构
-cpp
-复制
-编辑
+ViolationLog (Entity): Records logs that administrators delete due to inappropriate content.
+
+ViolationLogRepository (Repository): Stores violation log records.
+
+3. Code Structure
 com.group20.dailyreadingtracker.readinglog
-│── ReadingLog.java           // 阅读日志实体类
-│── ReadingLogDto.java        // 阅读日志DTO
-│── ReadingLogRepository.java // 阅读日志数据访问层
-│── ReadingLogService.java    // 阅读日志业务逻辑层
-│── ReadingLogController.java // 阅读日志控制器
+│── ReadingLog.java               // Reading log entity
+│── ReadingLogDto.java            // Reading log DTO
+│── ReadingLogRepository.java     // Repository layer
+│── ReadingLogService.java        // Business logic layer
+│── ReadingLogController.java     // REST controller
 │
 com.group20.dailyreadingtracker.violationlog
-│── ViolationLog.java         // 违规日志实体类
-│── ViolationLogRepository.java // 违规日志存储库
+│── ViolationLog.java             // Violation log entity
+│── ViolationLogRepository.java   // Violation log repository
 │
 com.group20.dailyreadingtracker.user
-│── User.java                 // 用户实体类
-│── UserRepository.java       // 用户存储库
-4. 详细功能说明
-4.1 阅读日志管理
-创建阅读日志
-方法: POST /api/reading-logs
+│── User.java                     // User entity
+│── UserRepository.java           // User repository
 
-描述: 允许用户创建新的阅读日志
+4. Detailed Functionality
+4.1 Reading Log Management
+Create a Reading Log
 
-请求体 (JSON):
+Method: POST /api/reading-logs
+Description: Allows a user to create a new reading log.
 
-json
-复制
-编辑
+Request Body (JSON):
+
 {
-  "title": "Spring Boot 入门",
+  "title": "Spring Boot Basics",
   "author": "John Doe",
   "date": "2024-03-27",
   "timeSpent": 60,
-  "notes": "学习了 Spring Boot 基础知识"
+  "notes": "Learned foundational Spring Boot concepts."
 }
-响应:
 
-json
-复制
-编辑
+
+Response:
+
 {
   "id": 1,
   "message": "Reading log created successfully"
 }
-获取当前用户的所有日志
-方法: GET /api/reading-logs
 
-描述: 获取当前用户的所有阅读日志。
+Get All Logs for Current User
 
-获取指定日志
-方法: GET /api/reading-logs/{logId}
+Method: GET /api/reading-logs
+Description: Retrieves all reading logs belonging to the current user.
 
-描述: 获取某个日志的详情。
+Get a Specific Log
 
-更新日志
-方法: PUT /api/reading-logs/{logId}
+Method: GET /api/reading-logs/{logId}
+Description: Retrieves details of a specific reading log.
 
-描述: 更新用户的阅读日志内容。
+Update a Reading Log
 
-删除日志
-方法: DELETE /api/reading-logs/{logId}
+Method: PUT /api/reading-logs/{logId}
+Description: Updates the content of an existing reading log.
 
-描述: 仅允许日志所属用户删除自己的日志。
+Delete a Reading Log
 
-4.2 管理员功能
-获取所有日志
-方法: GET /api/reading-logs/all
+Method: DELETE /api/reading-logs/{logId}
+Description: Only the owner of the log is allowed to delete it.
 
-描述: 允许管理员查看所有日志。
+4.2 Administrator Features
+Get All Logs
 
-删除违规日志
-方法: DELETE /api/admin/reading-logs/{logId}
+Method: GET /api/reading-logs/all
+Description: Allows administrators to view all logs in the system.
 
-描述: 允许管理员删除不适当内容的日志，并将日志记录到违规日志数据库中。
+Delete an Inappropriate Log
 
-流程:
+Method: DELETE /api/admin/reading-logs/{logId}
+Description: Allows administrators to delete logs containing inappropriate content and record them in the violation log table.
 
-先从数据库查找日志。
+Process:
 
-记录违规日志（ViolationLog）。
+Retrieve the log from the database.
 
-从数据库中删除该日志。
+Create and save a ViolationLog entry.
 
-代码逻辑:
+Delete the original reading log.
 
-java
-复制
-编辑
+Code Example:
+
 public void deleteInappropriateLog(Long logId) {
     ReadingLog log = readingLogRepository.findById(logId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reading log not found"));
 
-    // 记录违规日志
+    // Record violation log
     ViolationLog violationLog = new ViolationLog();
     violationLog.setLogId(log.getId());
     violationLog.setReason("Inappropriate content");
     violationLogRepository.save(violationLog);
 
-    // 删除日志
+    // Delete the reading log
     readingLogRepository.delete(log);
 }
-5. 异常处理
-系统提供全局异常处理，包括：
 
-找不到日志:
+5. Exception Handling
 
-json
-复制
-编辑
-{
-  "error": "Reading log not found"
-}
-无权限访问:
+The system includes global exception handling mechanisms:
 
-json
-复制
-编辑
-{
-  "error": "Access denied"
-}
-无效的日志 ID:
+Log Not Found
 
-json
-复制
-编辑
-{
-  "error": "Invalid log ID format"
-}
-6. 结论
-本系统提供完整的阅读日志管理功能，包括用户创建、查询、更新、删除日志的能力，并提供管理员对违规日志的管理。所有 API 采用 RESTful 设计，数据存储使用 Spring Data JPA，确保数据的持久化与一致性。
+{ "error": "Reading log not found" }
+
+
+Access Denied
+
+{ "error": "Access denied" }
+
+
+Invalid Log ID
+
+{ "error": "Invalid log ID format" }
+
+6. Conclusion
+
+The system provides a complete suite of reading log management features, including creating, viewing, updating, and deleting user logs. It also enables administrators to manage and remove inappropriate content effectively. All APIs follow RESTful design principles, and Spring Data JPA ensures reliable and consistent data persistence.
