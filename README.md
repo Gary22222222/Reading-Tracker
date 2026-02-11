@@ -20,7 +20,7 @@ This project supports role-based access control and provides a secure and user-f
 ## 🛠 Tech Stack
 
 - **Backend**: Spring Boot (MVC Architecture)
-- **Frontend**: HTML / CSS / JavaScript (or React/Vue if applicable)
+- **Frontend**: HTML / CSS / JavaScript 
 - **Database**: MySQL
 - **Security**: Spring Security + Role-based Authorization
 - **API Style**: RESTful APIs
