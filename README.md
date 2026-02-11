@@ -74,7 +74,12 @@ This page improves usability by centralizing personal features and supporting pe
 
 The Reading-Tracker system includes a dedicated login interface for account authentication.  
 Users must log in before accessing reading log features, ensuring that personal reading data is securely protected.  
-Authentication and authorization are implemented with role-based access control to restrict sensitive operations.
+
+Key security features include:  
+- **Email verification** for account registration to ensure valid users.  
+- **Password management**, including secure storage, password reset, and update functionality.  
+- **Authentication and authorization** implemented with role-based access control to restrict sensitive operations.
+
 
 ---
 
@@ -86,19 +91,7 @@ The detailed implementation can be found in the **reading-track** branch.
 
 ---
 
-## 📂 Project Structure (Example)
-
-```bash
-Reading-Tracker/
-│── src/
-│── images/
-│   ├── reading-log-dashboard.png
-│   ├── reading-log-detail-actions.png
-│   ├── reading-log-edit-page.png
-│   ├── reading-log-delete-confirmation.png
-│   ├── user-profile-homepage.png
-│── README.md
-│── pom.xml
+## 📂 Project Structure 
 
 
 The detailed implementation can be found in the **reading-track** branch.
