@@ -1,4 +1,3 @@
-# Reading-Tracker
 # 📚 Reading-Tracker
 
 Reading-Tracker is a web-based reading activity management system designed to help users record daily reading progress, manage reading logs, and improve reading consistency through structured tracking and visualization.  
@@ -20,7 +19,7 @@ This project supports role-based access control and provides a secure and user-f
 ## 🛠 Tech Stack
 
 - **Backend**: Spring Boot (MVC Architecture)
-- **Frontend**: HTML / CSS / JavaScript 
+- **Frontend**: HTML / CSS / JavaScript
 - **Database**: MySQL
 - **Security**: Spring Security + Role-based Authorization
 - **API Style**: RESTful APIs
@@ -29,59 +28,78 @@ This project supports role-based access control and provides a secure and user-f
 
 ## 📷 Software Function Demonstration
 
-This section provides a visual overview of the main functions implemented in the Reading-Tracker system.
+This section presents key implemented features of the Reading-Tracker system through screenshots of the main user interfaces.
 
-### ✅ Function 1: Reading Log Creation
-Users can create a new reading log by entering reading content, reading duration, and additional notes.  
-This function supports structured daily tracking and ensures data consistency.
+### ✅ Function 1: Main Dashboard (Reading Log List)
+The main interface displays all reading logs created by the user in a structured list format.  
+Users can easily review their reading history, check reading progress, and quickly access specific records.
 
-![Function 1](images/function1.png)
-
----
-
-### ✅ Function 2: Reading Log List & Overview
-The system provides a clear overview of all reading logs, allowing users to view historical records efficiently.  
-Users can quickly locate reading activities and track their long-term reading habits.
-
-![Function 2](images/function2.png)
+![Main Dashboard](images/reading-log-dashboard.png)
 
 ---
 
-### ✅ Function 3: Edit / Update Reading Logs
-Users are able to edit existing logs to correct reading information or update progress.  
-The update process ensures data integrity and is protected with permission validation.
+### ✅ Function 2: Reading Log Overview & Operation Navigation
+After selecting a specific reading log, the system provides an overview page that supports multiple operations.  
+From this interface, users can navigate to view details, edit the log, or delete the record efficiently.
 
-![Function 3](images/function3.png)
-
----
-
-### ✅ Function 4: Delete Logs with Access Control
-The system allows authorized users to delete reading logs when needed.  
-This operation includes role-based access control and confirmation steps to prevent accidental deletion.
-
-![Function 4](images/function4.png)
+![Log Overview & Actions](images/reading-log-detail-actions.png)
 
 ---
 
-### ✅ Function 5: Role-based Management / Admin Features
-Administrators have access to advanced management functions, such as user monitoring and system-level operations.  
-This ensures secure platform governance and supports multi-user usage scenarios.
+### ✅ Function 3: Edit Reading Log Interface
+The system provides a detailed editing page where users can update reading log information, such as reading duration, notes, and content progress.  
+This function ensures flexible record maintenance and supports continuous reading tracking.
 
-![Function 5](images/function5.png)
+![Edit Reading Log](images/reading-log-edit-page.png)
 
 ---
 
-## 📌 Project Highlights
+### ✅ Function 4: Delete Reading Log (Confirmation / Secure Operation)
+Users can delete unwanted or incorrect reading logs through the delete operation.  
+This process includes confirmation and permission validation to prevent accidental deletion and protect user data integrity.
 
-- Designed following **Scrum development workflow**
-- Built with **MVC layered architecture**
-- Implements **role-based access control** to protect sensitive operations
-- Supports **RESTful API communication** between frontend and backend
-- Includes clear **state transition logic** for reading logs
+![Delete Reading Log](images/reading-log-delete-confirmation.png)
+
+---
+
+### ✅ Function 5: Personal Homepage (User Profile Page)
+The personal homepage displays the user profile interface and provides quick access to individual reading-related information.  
+This page improves usability by centralizing personal features and supporting personalized management.
+
+![User Profile Homepage](images/user-profile-homepage.png)
+
+---
+
+## 🔐 Login and Authentication
+
+The Reading-Tracker system includes a dedicated login interface for account authentication.  
+Users must log in before accessing reading log features, ensuring that personal reading data is securely protected.  
+Authentication and authorization are implemented with role-based access control to restrict sensitive operations.
 
 ---
 
 ## 📌 Source Code
+
+The detailed implementation can be found in the **reading-track** branch.
+
+👉 Please switch to branch: `reading-track` to view full source code.
+
+---
+
+## 📂 Project Structure (Example)
+
+```bash
+Reading-Tracker/
+│── src/
+│── images/
+│   ├── reading-log-dashboard.png
+│   ├── reading-log-detail-actions.png
+│   ├── reading-log-edit-page.png
+│   ├── reading-log-delete-confirmation.png
+│   ├── user-profile-homepage.png
+│── README.md
+│── pom.xml
+
 
 The detailed implementation can be found in the **reading-track** branch.
 
